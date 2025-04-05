@@ -1,0 +1,51 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User_Account {
+  id                  String           @id @default(dbgenerated("gen_random_uuid()"))
+  username            String           @unique
+  email               String           @unique
+  password            String
+  createdAt           DateTime         @default(now())
+  Mole_MetaData       Mole_MetaData[]
+  User_FitzPatrick User_FitzPatrick?
+}
+
+model Mole_Assessment {
+  id               String        @id @default(dbgenerated("gen_random_uuid()"))
+  risk_assessment  Int         // This will be for the assessment score
+  risk_summary     String      // For the NLP output
+  model_assessment String      // benign or malignant
+  createdAt        DateTime      @default(now())
+  mole_id          String
+  mole_ref         Mole_MetaData @relation(fields: [mole_id], references: [id])
+}
+
+model User_FitzPatrick {
+  id             String        @id @default(dbgenerated("gen_random_uuid()"))
+  hair_color     String
+  eye_color      String
+  age            Int
+  skin_tone      String
+  immune_health  String?
+  gender         String
+  genetics       String?
+  user_account_foreignkey String @unique
+  User_Account   User_Account @relation(fields: [user_account_foreignkey], references: [id])
+}
+
+model Mole_MetaData {
+  id                 String            @id @default(dbgenerated("gen_random_uuid()"))
+  body_part          String
+  mole_owner         String
+  x_coordinate       Int
+  y_coordinate       Int
+  overall_assessment Mole_Assessment[] // All the history of that mole
+  User_Account       User_Account      @relation(fields: [mole_owner], references: [id])
+}
