@@ -5,6 +5,7 @@ import { ValidationError } from "../middlewares/error.middleware";
 const prisma = new PrismaClient();
 
 export const findUser = async(username: string, password: string) => {
+    console.log(`Passed username ${username} password ${password}`);
     try {
         const user = await prisma.user_Account.findFirst({
             where: { 

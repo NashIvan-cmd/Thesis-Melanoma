@@ -3,8 +3,8 @@ import { authenticateLogin, createAccount } from "../controllers/account.control
 
 const router = express.Router();
 
-router.post('/v1/accounts', authenticateLogin);
-router.post('/v1/auth/account', createAccount);
+router.post('/v1/auth/account', authenticateLogin);
+router.post('/v1/new/account', createAccount);
 // router.post('/v1/reset/password', requestPasswordReset);
 
 export default router;

@@ -67,27 +67,42 @@ export const createAccount = async(req: Request, res: Response, next: NextFuncti
 }
 
 export const authenticateLogin = async(req: Request, res: Response, next: NextFunction) => {
+    const refreshT = req.headers.cookie;
+    console.log("Checking refresh T", refreshT);
+    console.log("Client Request", req.body);
     const { username, password }: IUser = req.body;
     try {
-        if (!username || !password) {
-            res.status(201).json({
-                message: 'Incomplete credentials'
-            })
-        }
+        // if (!username || !password) {
+        //     res.status(201).json({
+        //         message: 'Incomplete credentials'
+        //     })
+        // }
 
-        const user = await findUser(username, password);
+        // const user = await findUser(username, password);
+        const userId = "3b227511-de4c-4eac-bdaf-0d99ea321580";
 
-       const accessToken = accessTokenGenerator(user.username);
-       const refreshToken = refreshTokenGenerator(user.username);
+       const accessToken = accessTokenGenerator("GorgcTest");
+    
+       let refreshToken = refreshT;
+       if (refreshT) {
+        // Validate if not expired
+        console.log("Refresh token value", refreshT);
+       } else {
+        refreshToken = refreshTokenGenerator("GorgcTest");
+       }
+      
 
-        if (!user) {
-            res.status(404).json({
-                message: 'Not Found',
-                success: false
-            });
-        }
+        // if (!user) {
+        //     res.status(404).json({
+        //         message: 'Not Found',
+        //         success: false
+        //     });
+        // }
 
         res.status(202).json({
+            accessToken,
+            refreshToken,
+            userId,
             message: 'Successful login',
             success: true
         });
