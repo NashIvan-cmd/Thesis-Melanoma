@@ -12,6 +12,7 @@ model User_Account {
   username            String           @unique
   email               String           @unique
   password            String
+  refreshToken        String?
   createdAt           DateTime         @default(now())
   Mole_MetaData       Mole_MetaData[]
   User_FitzPatrick User_FitzPatrick?
