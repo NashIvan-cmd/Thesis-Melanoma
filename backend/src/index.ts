@@ -28,8 +28,7 @@ app.get("/test", (req, res) => {
 // Using a global middleware error handler that will apply to all the routes
 app.use(errorHandler);
 
-
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
+const PORT = parseInt(process.env.PORT || '5000', 10);
+app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });

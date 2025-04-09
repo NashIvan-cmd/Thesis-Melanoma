@@ -8,19 +8,20 @@ interface Imole_metadata {
     x_coordinate: string;
     y_coordinate: string;
     body_part: string; // Expecting a name
-    mole_owner: string;
+    moleOwner: string;
     id: string;
 }
 
 // Processing the image
 // Automatic?
 
-export const mole_metadata_controller = async(req: Request, res: Response, next: NextFunction) => {
+export const mole_metadata_controller = async(req: Request, res: Response, next: NextFunction) => { 
+        console.log("Client Request: ", req.body);
         const { 
             x_coordinate, 
             y_coordinate,
             body_part,
-            mole_owner,
+            moleOwner,
             id 
         }: Imole_metadata = req.body;
     try {
@@ -33,7 +34,7 @@ export const mole_metadata_controller = async(req: Request, res: Response, next:
             parsedX, 
             parsedY, 
             body_part, 
-            mole_owner
+            moleOwner
         );
         
         if (!thisUserMole) {

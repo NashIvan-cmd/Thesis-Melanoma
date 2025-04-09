@@ -21,14 +21,15 @@ export const createMoleMetadata = async(
     x_coordinate: number, 
     y_coordinate: number, 
     body_part: string, 
-    mole_owner:string, 
+    mole_owner: string, 
 ) => {
     try {
+        console.log("Mole owner", mole_owner);
         const newMole = await prisma.mole_MetaData.create({
             data: {
                 x_coordinate,
                 y_coordinate,
-                body_part,
+                body_part: "Test",
                 mole_owner,
             }
         });
