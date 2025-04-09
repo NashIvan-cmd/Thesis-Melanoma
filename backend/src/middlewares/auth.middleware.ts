@@ -63,7 +63,7 @@ export const accessTokenGenerator  = (username: string) => {
             throw new Error;
         }
 
-        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '30m' });
+        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '3h' });
 
         console.log({ accessToken });
 

@@ -7,9 +7,10 @@ interface IauthRequest extends Request {
 }
 
 export const validateToken = (req: IauthRequest, res: Response, next: NextFunction): void  => {
+    console.log("Client Request Header: ", req.headers);
     const authHeader = req.headers.authorization;
     const refreshToken = req.headers.refreshauth;
-    console.log(req.headers);
+    console.log("Authheader", authHeader);
 
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
          res.status(401).json({ message: "Unauthorized: No token provided" });
