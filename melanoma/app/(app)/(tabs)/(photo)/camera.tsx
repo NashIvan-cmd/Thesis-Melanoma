@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { View, Text } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '@env';
@@ -25,20 +26,44 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
     const { accessToken, userId } = useSession();
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
+    const [photo, setPhoto] = useState();
     const [uri, setUri] = useState<string | null>();
     const ref = useRef<CameraView>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
+    const [zoom, setZoom] = useState(0.8);
 
     const takePicture = async () => {
-        const photo = await ref.current?.takePictureAsync();
-        setUri(photo?.uri);
+        try {
+            const photo = await ref.current?.takePictureAsync();
+            
+            if (!photo) {
+                throw new Error("Photo is undefined"); 
+            }
+            console.log("All image metadata", photo); 
+            const convertedUri =  await convertToBase64(photo.uri);
+            setUri(convertedUri);
+        } catch (error) {
+            console.error("Error @ take picture", error);
+        }
+       
     }
 
     useEffect(() => {
       console.log('Uri State', uri);  
       console.log('Show modal state', showModal);
     }, [uri]);
-        
+    
+    const convertToBase64 = async (uri: string): Promise<string> => {
+        const response = await fetch(uri);
+        const blob = await response.blob();
+      
+        return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string); // data:image/jpeg;base64,...
+          reader.onerror = reject;
+          reader.readAsDataURL(blob);
+        });
+      };
 
     const retakePicture = () => {
         setShowModal(false);
@@ -64,7 +89,8 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                 body: JSON.stringify({
                     x_coordinate,
                     y_coordinate,
-                    moleOwner: userId 
+                    moleOwner: userId,
+                    photoUri: uri,
                 })
             });
             
@@ -122,6 +148,7 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                 facing={facing}
                 enableTorch={true}
                 autofocus='on'
+                zoom={zoom}
                 ref={ref}
                 >
                     <View>
