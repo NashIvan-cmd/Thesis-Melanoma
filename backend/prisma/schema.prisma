@@ -49,4 +49,5 @@ model Mole_MetaData {
   y_coordinate       Int
   overall_assessment Mole_Assessment[] // All the history of that mole
   User_Account       User_Account      @relation(fields: [mole_owner], references: [id])
+  cloudId            String
 }

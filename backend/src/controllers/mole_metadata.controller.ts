@@ -9,6 +9,7 @@ interface Imole_metadata {
     y_coordinate: string;
     body_part: string; // Expecting a name
     moleOwner: string;
+    photoUri: string;
     id: string;
 }
 
@@ -22,10 +23,11 @@ export const mole_metadata_controller = async(req: Request, res: Response, next:
             y_coordinate,
             body_part,
             moleOwner,
+            photoUri,
             id 
         }: Imole_metadata = req.body;
     try {
-        
+    
         const parsedX = parseInt(x_coordinate);
         const parsedY = parseInt(y_coordinate);
         // I am not satisfied with this logic.
@@ -33,7 +35,8 @@ export const mole_metadata_controller = async(req: Request, res: Response, next:
         await createMoleMetadata(
             parsedX, 
             parsedY, 
-            body_part, 
+            body_part,
+            photoUri, 
             moleOwner
         );
         
