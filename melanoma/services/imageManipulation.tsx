@@ -1,6 +1,5 @@
-import { useImage } from "expo-image";
 import { useImageManipulator } from "expo-image-manipulator";
-
+import * as ImageManipulator from "expo-image-manipulator";
 
 export const convertToBase64 = async (uri: string): Promise<string> => {
     const response = await fetch(uri);
@@ -14,23 +13,22 @@ export const convertToBase64 = async (uri: string): Promise<string> => {
     });
   };
 
-export const manipulateIosImage = async(uri: string, imageWidth: number, imageHeight: number) => {
-    const context = useImageManipulator(uri);
-    const cropWidth = 200;
-    const cropHeight = 200;
+export const manipulateIosImage = async (uri: string, imageWidth: number, imageHeight: number) => {
+  console.log({ imageWidth, imageHeight });
+  const cropWidth = imageWidth * 0.6;
+  const cropHeight = imageHeight * 0.6;
+  const originX = (imageWidth - cropWidth) / 2;
+  const originY = (imageHeight - cropHeight) / 2;
 
-    const originX = (imageWidth - cropWidth) / 2;
-    const originY = (imageHeight - cropHeight) / 2;
 
-    context.crop({
-        height: cropHeight, 
-        originX, 
-        originY, 
-        width: cropWidth       
-    })
-
-    const image = await context.renderAsync();
-
-    return image;
-
-}
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [
+      { crop: { originX: originX, originY: originY, width: cropWidth, height: cropHeight } },
+      { rotate: 0 }, // helps apply rotation metadata (EXIF fix)
+    ],
+    { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+  );
+  
+  return result; // Has { uri, width, height }
+};

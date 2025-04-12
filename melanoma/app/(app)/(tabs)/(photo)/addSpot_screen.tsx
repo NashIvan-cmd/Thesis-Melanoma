@@ -15,6 +15,8 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 
 import RenderCamera from '@/app/(app)/(tabs)/(photo)/camera'
+import ImageSourceSelector from './imageSourceSelect';
+import { useImageStore } from '@/services/imageStore';
 
 const { width, height } = Dimensions.get('window');
 
@@ -43,10 +45,11 @@ type Normalized = {
 // I need a pointer on the screen. 
 // After that I need to limit the pointer within the body.
 const AddSpot_screen = () => {
-const ASPECT_RATIO = 620 / 255; // original height / original width
-const RESPONSIVE_WIDTH = width * 0.7; // Using 70% of screen width
-const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
-  const [showCamera, setShowCamera] = useState(false);
+const { setCoordinates } = useImageStore();
+  const ASPECT_RATIO = 620 / 255; // original height / original width
+  const RESPONSIVE_WIDTH = width * 0.7; // Using 70% of screen width
+  const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
+  const [showSelector, setShowSelector] = useState(false);
   const [bodyPosition, setBodyPosition] = useState<'Front Body' | 'Back Body'>('Front Body');
   const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
   const [touchPosition, setTouchPosition] = useState<TouchPosition>({ 
@@ -55,7 +58,7 @@ const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
     percentX: 50,
     percentY: 50
   });
-  const [coordinates, setCoordinates] = useState<Coordinates>({ 
+  const [coordinates, setCoordinatesLocal] = useState<Coordinates>({ 
     x: 0 , 
     y: 0, 
     percentX: 0, 
@@ -162,7 +165,7 @@ const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
     const percentY = (clampedY / imageSize.height) * 100;
   
     setTouchPosition({ x: clampedX, y: clampedY, percentX, percentY });
-    setCoordinates({
+    setCoordinatesLocal({
       x: clampedX,
       y: clampedY,
       percentX,
@@ -171,6 +174,7 @@ const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
       absoluteY
     });
     setNormalizedCoordinates({normalizedX: absoluteX, normalizedY: clampedY});
+    setCoordinates(absoluteX, clampedY);
   };
   
 
@@ -187,14 +191,14 @@ const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
   }
   }
 
-  const handleShowCameraRequest = () => {
-    setShowCamera(true);
+  const handleAddSpotRequest = () => {
+    setShowSelector(true);
   }
 
   return (
     <>
-      {showCamera ? (
-        <RenderCamera x_coordinate={normalizedCoordinates.normalizedX} y_coordinate={normalizedCoordinates.normalizedY}/>
+      {showSelector ? (
+        <ImageSourceSelector />
       ) : ( 
         <View className='flex-1 p-2 pr-5 pl-5 items-center'>
           <Text>0 spots</Text>
@@ -249,7 +253,7 @@ const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
             </ButtonGlue>
           </View>
           <View className='w-full mt-auto mb-1 rounder-lg'>
-            <ButtonGlue onPress={handleShowCameraRequest}>
+            <ButtonGlue onPress={handleAddSpotRequest}>
               <ButtonText>
                 Add Spot
               </ButtonText>

@@ -3,13 +3,10 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
-      "@/*": [
-        "./*"
-      ],
-      "tailwind.config": [
-        "./tailwind.config.js"
-      ]
-    }
+      "@/*": ["./*"],
+      "tailwind.config": ["./tailwind.config.js"]
+    },
+    "typeRoots": ["node_modules/@types", "node_modules/@expo/vector-icons/types"]
   },
   "include": [
     "**/*.ts",

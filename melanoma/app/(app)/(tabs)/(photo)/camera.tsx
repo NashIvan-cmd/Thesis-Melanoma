@@ -2,6 +2,7 @@ import { Platform } from 'react-native';
 import { View, Text } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '@env';
+import * as ImagePicker from 'expo-image-picker';
 
 import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 import { Image } from 'expo-image';
@@ -16,6 +17,7 @@ import Entypo from '@expo/vector-icons/Entypo';
 import ModalComponent from '@/components/Modal';
 import { router } from 'expo-router';
 import { useSession } from '@/services/authContext';
+import { useImageStore } from '@/services/imageStore';
 
 interface IRenderCameraProps {
     x_coordinate: number,
@@ -23,6 +25,7 @@ interface IRenderCameraProps {
 }
 
 const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
+    const { setImageData } = useImageStore();
     const { accessToken, userId } = useSession();
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
@@ -39,17 +42,44 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
             if (!photo) {
                 throw new Error("Photo is undefined"); 
             }
-            console.log("All image metadata", photo); 
-            const convertedUri =  await convertToBase64(photo.uri);
-            setUri(convertedUri);
+            console.log("All image metadata", photo);
+            
+            // let photo2 = { 
+            //     uri: photo.uri,
+            //     width: photo.width,
+            //     height: photo.height
+            // }
+
+            // if (Platform.OS == "ios") {
+            //     photo2 =  await manipulateIosImage(photo.uri, photo.height, photo.width);
+            // }
+            setUri(photo.uri);
+            setImageData(photo.uri);
         } catch (error) {
             console.error("Error @ take picture", error);
         }
        
     }
 
+    const pickImage = async () => {
+        const result = await ImagePicker.launchImageLibraryAsync({
+          mediaTypes: ImagePicker.MediaTypeOptions.Images,
+          allowsEditing: true,
+          aspect: [4, 3],
+          quality: 1,
+        });
+      
+        // Make sure the result is valid and the URI exists
+        if (!result.canceled && result.assets && result.assets[0].uri) {
+          const uri = result.assets[0].uri;  // Get the URI from the first asset
+          setUri(uri);  // Save the URI of the selected image
+        } else {
+          console.error("Image picker failed or user cancelled.");
+        }
+    };
+
     useEffect(() => {
-      console.log('Uri State', uri);  
+    //   console.log('Uri State', uri);  
       console.log('Show modal state', showModal);
     }, [uri]);
     
@@ -75,29 +105,8 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
         router.navigate('/(app)/(tabs)');
     }
 
-    const processImageReq = async() => {
-        try {
-            console.log("Request should start");
-            console.log("API URL: ", API_URL);
-            console.log({ accessToken, userId });
-            const result = await fetch(`${API_URL}/v1/metadata/mole`, {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                    "authorization": accessToken ? `Bearer ${accessToken}` : ''
-                },
-                body: JSON.stringify({
-                    x_coordinate,
-                    y_coordinate,
-                    moleOwner: userId,
-                    photoUri: uri,
-                })
-            });
-            
-            console.log({ result });
-        } catch (error) {
-            
-        }
+    const navigateToImagePreview = async() => {
+        router.navigate("/(app)/(tabs)/(photo)/imagePreview");
     }
 
     if (!permission) {
@@ -116,9 +125,9 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                     <Image source={uri} style={{ width: '100%', height: '60%' }} />
                     
                     <View className='w-80 mt-auto self-center'>
-                        <ButtonGlue className='w-100 h-14 mb-1' onPress={processImageReq} >
+                        <ButtonGlue className='w-100 h-14 mb-1' onPress={navigateToImagePreview} >
                             <ButtonText>
-                                Process the Image
+                                Next
                             </ButtonText>
                         </ButtonGlue>
                         <ButtonGlue className='w-100 h-14 mb-1' onPress={handleCancelRequest}>
@@ -143,11 +152,14 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
             : 
             (
                 <>
+                {   
+
+                }
                 <CameraView 
                 style={{ height: '80%' }}
                 facing={facing}
                 enableTorch={true}
-                autofocus='on'
+                autofocus={ Platform.OS == "ios" ? 'off' : 'on' }
                 zoom={zoom}
                 ref={ref}
                 >
@@ -160,7 +172,7 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                 </CameraView>
                 <View className='flex-1 items-center justify-center bg-custom-dark'>
                     <Pressable onPress={takePicture}>
-                        {({ pressed }) => (
+                        {({ pressed }: { pressed: boolean }) => (
                             <View>
                                 {pressed ? 
                                     <MaterialIcons name="radio-button-on" size={84} color="black" />
