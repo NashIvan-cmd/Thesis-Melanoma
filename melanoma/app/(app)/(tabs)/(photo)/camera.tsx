@@ -34,6 +34,7 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
     const ref = useRef<CameraView>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [zoom, setZoom] = useState(0.8);
+    const [torchOn, setTorchOn] = useState(true);
 
     const takePicture = async () => {
         try {
@@ -158,7 +159,7 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                 <CameraView 
                 style={{ height: '80%' }}
                 facing={facing}
-                enableTorch={true}
+                enableTorch={torchOn}
                 autofocus={ Platform.OS == "ios" ? 'off' : 'on' }
                 zoom={zoom}
                 ref={ref}
