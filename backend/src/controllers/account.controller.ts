@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 // import jwt from "jsonwebtoken";
 import { findUser } from "../services/account.service";
-import { hashPassword } from "../utils/account.utils";
+import { emailVerificationLogic, generateSimpleVerificationCode, hashPassword } from "../utils/account.utils";
 import { accessTokenGenerator, refreshTokenGenerator } from "../middlewares/auth.middleware";
 
 import dotenv from "dotenv";
@@ -24,8 +24,10 @@ interface create_account {
 // req: Request ensures that we have property of req.body, params and etc.
 // res: Response ensures that the methods used are json, status and etc
 export const createAccount = async(req: Request, res: Response, next: NextFunction) => {
+    console.log("Account creation request");
+    const { username, password, email }: create_account = req.body;
+
     try {
-        const { username, password, email }: create_account = req.body;
 
         const hashedPassword = hashPassword(password);
         // Up to this point we can say that all of the provided credentials is correct
@@ -66,6 +68,26 @@ export const createAccount = async(req: Request, res: Response, next: NextFuncti
     }
 }
 
+export const generateCode = async(req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body
+    console.log({ email });
+    try {
+        const code = generateSimpleVerificationCode();
+
+        const response = await emailVerificationLogic(email, code);
+
+        console.log(code);
+
+        res.status(200).json({
+            code,
+            response
+        })
+    } catch (error) {
+        console.error("Error @ generate code", error);
+        res.status(500).json({ error: 'Email sending failed' });
+    }
+}
+
 export const authenticateLogin = async(req: Request, res: Response, next: NextFunction) => {
     const refreshT = req.headers.cookie;
     console.log("Checking refresh T", refreshT);
@@ -79,7 +101,7 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
         // }
 
         // const user = await findUser(username, password);
-        const userId = "b0b95133-d48a-4756-96f5-5d74f2ba892d";
+        const userId = "6dcd4fb5-193a-4470-947e-c1f635c3f5b6";
 
        const accessToken = accessTokenGenerator("GorgcTest");
     
