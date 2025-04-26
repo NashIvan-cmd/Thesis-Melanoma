@@ -7,10 +7,15 @@ import { useSession } from '@/services/authContext';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Input, InputField } from '@/components/ui/input';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
+import Signup from './sign-up';
 
 export default function SignIn() {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+
+  const handleSignUpRequest = () => {
+    router.navigate('/sign-up');
+  }
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -43,6 +48,10 @@ export default function SignIn() {
        
       }}>
         <ButtonText>Sign In</ButtonText>
+      </ButtonGlue>
+      <Text>No Account yet?</Text>
+      <ButtonGlue onPress={handleSignUpRequest}>
+        <ButtonText>Sign Up</ButtonText>
       </ButtonGlue>
     </View>
     </GluestackUIProvider>
