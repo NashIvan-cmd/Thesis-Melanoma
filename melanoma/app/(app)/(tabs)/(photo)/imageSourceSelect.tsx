@@ -11,6 +11,7 @@ interface ISelectorProps {
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button'
 import { useImageStore } from '@/services/imageStore';
 import { Image } from 'expo-image';
+import { convertToBase64 } from '@/services/imageManipulation';
 const ImageSourceSelector = () => {
     
     const { setImageData } = useImageStore();
@@ -31,7 +32,8 @@ const ImageSourceSelector = () => {
         if (!result.canceled && result.assets && result.assets[0].uri) {
             const uri = result.assets[0].uri;  // Get the URI from the first asset
             console.log(uri);
-            setImageData(uri);
+            const convertedUri = await convertToBase64(uri);
+            setImageData(convertedUri);
         } else {
             console.error("Image picker failed or user cancelled.");
         }
@@ -57,7 +59,7 @@ const ImageSourceSelector = () => {
                 <ButtonText>Take Picture</ButtonText>
             </ButtonGlue>
         }  
-        <ButtonGlue classname='mt-20' onPress={pickImage}>
+        <ButtonGlue className='mt-20' onPress={pickImage}>
             <ButtonText>Upload Picture</ButtonText>
         </ButtonGlue>
         <ButtonGlue onPress={navigateToImagePreview}>

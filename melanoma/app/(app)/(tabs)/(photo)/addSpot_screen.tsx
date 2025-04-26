@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
-import Animated, { useSharedValue, useAnimatedStyle, withSpring } from 'react-native-reanimated';
+import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector, PanGestureHandler, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
 
 import { Image } from 'expo-image';
@@ -17,6 +17,8 @@ import Entypo from '@expo/vector-icons/Entypo';
 import RenderCamera from '@/app/(app)/(tabs)/(photo)/camera'
 import ImageSourceSelector from './imageSourceSelect';
 import { useImageStore } from '@/services/imageStore';
+import { molesToDisplay } from '@/api/moleData';
+import { useSession } from '@/services/authContext';
 
 const { width, height } = Dimensions.get('window');
 
@@ -45,7 +47,8 @@ type Normalized = {
 // I need a pointer on the screen. 
 // After that I need to limit the pointer within the body.
 const AddSpot_screen = () => {
-const { setCoordinates } = useImageStore();
+  const { userId, accessToken } = useSession();
+  const { setCoordinates, resetUri } = useImageStore();
   const ASPECT_RATIO = 620 / 255; // original height / original width
   const RESPONSIVE_WIDTH = width * 0.7; // Using 70% of screen width
   const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
@@ -101,9 +104,14 @@ const { setCoordinates } = useImageStore();
       savedScale.value = scale.value;
       });
     
-  useEffect(() => {
-  console.log('Scale value', scale.value);
-  }, [scale.value]);
+  // Fetch the moles from the backend
+  // useEffect(() => {
+  //   const timeout = setTimeout(() => {
+  //     console.log('Scale value', scale.value);
+  //   }, 3000);
+
+  //   return () => clearTimeout(timeout);
+  // }, [scale.value]);
   
   /** 📌 Pan Gesture - Moves Image when Zoomed */
   const panGesture = Gesture.Pan()
@@ -164,7 +172,7 @@ const { setCoordinates } = useImageStore();
     const percentX = (clampedX / imageSize.width) * 100;
     const percentY = (clampedY / imageSize.height) * 100;
   
-    setTouchPosition({ x: clampedX, y: clampedY, percentX, percentY });
+    runOnJS(setTouchPosition)({ x: clampedX, y: clampedY, percentX, percentY });
     setCoordinatesLocal({
       x: clampedX,
       y: clampedY,
@@ -173,10 +181,20 @@ const { setCoordinates } = useImageStore();
       absoluteX,
       absoluteY
     });
-    setNormalizedCoordinates({normalizedX: absoluteX, normalizedY: clampedY});
-    setCoordinates(absoluteX, clampedY);
-  };
+    runOnJS(setNormalizedCoordinates)({normalizedX: absoluteX, normalizedY: clampedY});
+  }
   
+  useEffect(() => {
+      resetUri();
+    const timeout = setTimeout(() => {
+      const parsedX = Math.floor(normalizedCoordinates.normalizedX);
+      const parsedY = Math.floor(normalizedCoordinates.normalizedY);
+      setCoordinates(parsedX, parsedY, bodyPosition);
+    }, 3000)  
+
+    return () => clearTimeout(timeout);
+
+  },[normalizedCoordinates.normalizedX, normalizedCoordinates.normalizedY]);
 
   // console.log({ touchPosition });
   console.log({ coordinates });
