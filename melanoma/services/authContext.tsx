@@ -1,6 +1,8 @@
 import { useContext, createContext, type PropsWithChildren, useState } from 'react';
 import { useStorageState } from '@/services/useStorageState';
 
+import { API_URL } from '@env';
+
 const AuthContext = createContext<{
   signIn: (username: string, password: string) => Promise<boolean>;
   signOut: () => void;
@@ -45,7 +47,7 @@ export function SessionProvider({ children }: PropsWithChildren) {
           // Perform sign-in logic here
           console.log("Attemp to sign in")
           try {
-             const result =  await fetch("http://192.168.100.133:5001/v1/auth/account", {
+             const result =  await fetch(`${API_URL}/v1/auth/account`, {
               method: "POST",
               headers: {
                 'Content-Type': 'application/json',
