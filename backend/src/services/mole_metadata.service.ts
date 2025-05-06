@@ -106,3 +106,16 @@ export const getAllMoleByUserId = async(userId: string): Promise<object[]> => {
         throw error;
     }
 }
+
+
+export const getMoleById = async(moleId: string): Promise<object|null> => {
+    try {
+        const result = await prisma.mole_MetaData.findUnique({
+            where: { id: moleId }
+        })
+        
+        return result
+    } catch (error) {
+        throw error;
+    }
+}

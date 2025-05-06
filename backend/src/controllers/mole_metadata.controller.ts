@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import { createMoleMetadata, fetchMole, getAllMoleByUserId, moleFetchAllByUser } from "../services/mole_metadata.service";
+import { createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, moleFetchAllByUser } from "../services/mole_metadata.service";
 import { bodyOrientationParser } from "../utils/mole_metadata.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { MoleData, signedUrlGenerator } from "../utils/cloudinary";
@@ -66,6 +66,7 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
     }
 }
 
+// All moles are being fetched
 export const moleFetchAllController = async(req: Request, res: Response, next: NextFunction) => {
     const { moleOwnerId } = req.body
     try {
@@ -98,6 +99,30 @@ export const getAllLatestMoleController = async(req: Request, res: Response, nex
 
         res.status(200).json({
             manipulatedMoles
+        })
+    } catch (error) {
+        next (error);
+    }
+}
+
+export const fetchMoleById = async(req: Request, res: Response, next: NextFunction) => {
+    const { moleId } = req.body;
+    try {
+        if (!moleId) throw new ValidationError("Missing mole Id");
+
+        const moleData = await getMoleById(moleId);
+
+        if (!moleData) {
+            res.status(404).json({
+                success: false,
+                message: "Mole not found"
+            });
+
+            return;
+        }
+
+        res.status(200).json({
+            moleData
         })
     } catch (error) {
         next (error);
