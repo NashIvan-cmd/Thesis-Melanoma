@@ -10,7 +10,7 @@ import { moleData } from '@/api/moleData';
 const ImagePreview = () => {
     // I think I must add some checker here for sure
     const { accessToken, userId } = useSession();
-    const { uri } = useImageStore.getState();
+    const uri = useImageStore((state) => state.uri);
 
   const processImageRequest = async() => {
     try {

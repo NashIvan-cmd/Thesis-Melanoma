@@ -13,12 +13,14 @@ const BackBody2 = require('@/assets/images/BackBody-Photoroom.png');
 
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import Entypo from '@expo/vector-icons/Entypo';
+import BackButton from '@/components/backButton';
 
 import RenderCamera from '@/app/(app)/(tabs)/(photo)/camera'
 import ImageSourceSelector from './imageSourceSelect';
 import { useImageStore } from '@/services/imageStore';
 import { molesToDisplay } from '@/api/moleData';
 import { useSession } from '@/services/authContext';
+import { router } from 'expo-router';
 
 const { width, height } = Dimensions.get('window');
 
@@ -73,6 +75,15 @@ const AddSpot_screen = () => {
     normalizedX: 0,
     normalizedY: 0
   });
+  const [moles, setMoles] = useState<{ id: string, x: number, y: number }[]>([
+    // Example moles data: 
+    { id: 'M1', x: 111, y: 205 },
+    { id: 'M2', x: 134, y: 340 },
+    { id: 'M3', x: 113, y: 89 },
+    { id: 'M4', x: 78, y: 115 },
+    // Add more moles as needed
+  ]);
+  
   const imageRef = useRef(null);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
   const scale = useSharedValue(1);
@@ -210,15 +221,13 @@ const AddSpot_screen = () => {
   }
 
   const handleAddSpotRequest = () => {
-    setShowSelector(true);
+    router.navigate("/instructions");
   }
 
   return (
     <>
-      {showSelector ? (
-        <ImageSourceSelector />
-      ) : ( 
         <View className='flex-1 p-2 pr-5 pl-5 items-center'>
+          <BackButton></BackButton>
           <Text>0 spots</Text>
           <View style={styles.coordinatesDisplay}>
             <Text style={styles.coordinatesText}>Relative: x={coordinates.x.toFixed(0)}, y={coordinates.y.toFixed(0)}</Text>
@@ -248,6 +257,25 @@ const AddSpot_screen = () => {
                         { width: 225, height: 545 }
                     ]}/>
             </GestureDetector>
+            {moles.map((mole) => {
+              
+              return(
+                <View 
+                  key={mole.id} // Ensure each marker has a unique key
+                  style={[
+                  styles.indicator,
+                  { 
+                    left: mole.x - 12, 
+                    top: mole.y,
+                    transform: [
+                      { translateX: -10 }
+                    ]
+                  }
+                ]}>
+                    <Text style={{ fontSize: 20, color: 'red' }}>.</Text> {/* Simple "M" marker */}
+                </View>
+              )
+            })}
             <View style={[
                 styles.indicator,
                 { 
@@ -285,8 +313,6 @@ const AddSpot_screen = () => {
             </Text>
           </View>
         </View>
-     )
-    }
     </>
   )
 }

@@ -57,9 +57,10 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen 
-        name="(settings)/index"
+        name="(settings)"
         options={{
           title: 'Settings',
+          headerShown: false,
           tabBarIcon: ({ color, focused }) => (
             <Ionicons name={focused ? 'settings-sharp' : 'settings-outline'} color={color} size={24} />
           ),

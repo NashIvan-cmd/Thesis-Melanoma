@@ -13,14 +13,17 @@ import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
 
 import { Button as ButtonGlue, ButtonText } from "@/components/ui/button"
 import { Pressable } from '@/components/ui/pressable';
+import ModalComponent from '@/components/Modal';
 
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
 import { useSession } from '@/services/authContext';
-import { molesToDisplay } from '@/api/moleData';
+import { moleData, molesToDisplay } from '@/api/moleData';
+import { useMoleDataStore } from '@/services/moleStore';
+import { API_URL } from '@env';
 
-type Mole = {
+export type Mole = {
     id: string;
     body_orientation: string;
     body_part: string;
@@ -35,11 +38,14 @@ type Mole = {
 
 const Photo = () => {
     const { userId, accessToken } = useSession();
+    const { setSelectedMole } = useMoleDataStore();
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
     const [uri, setUri] = useState<string | null>();
     const [molesArray, setMolesArray] = useState([]);
     const ref = useRef<CameraView>(null);
+    const [showModal, setShowModal] = useState(false);
+
 
     const router = useRouter();
 
@@ -136,11 +142,30 @@ const Photo = () => {
         )
     }
 
-    const navigateToAddSpot = () => {
-        router.push('/(app)/(tabs)/(photo)/addSpot_screen'); // Adjust this based on your tab structure
+    const navigateToAddSpot = async() => {
+        try {
+            const checkFitzData = await fetch(`${API_URL}/v1/check?userId=${userId}`, {
+                method: "GET"
+            })
+
+            console.log({ checkFitzData });
+            const data = await checkFitzData.json();
+
+            console.log(data);
+            if (!data || !data.record) {
+                setShowModal(true);
+                return;
+            }
+
+            router.push('/(app)/(tabs)/(photo)/addSpot_screen'); // Adjust this based on your tab structure
+        } catch (error) {
+            console.error("Error @ navigate to add spot", error);
+        }
     }
 
-    const navigateToMoleDetails = () => {
+    const navigateToMoleDetails = (index: number) => {
+        console.log("Index selected: ", index);
+        setSelectedMole(molesArray[index]);
         router.navigate('/screens/moleDetails');
     }
 
@@ -155,7 +180,7 @@ const Photo = () => {
                     renderItem={({ item, index }) => (
                         <View key={index} className='flex flex-row h-[90] w-full bg-slate-600/80 p-[10] mt-[5] rounded'>
                             <View className="min-h-[40px] min-w-[40px] bg-orange-500 mr-[10] rounded">
-                                <Image source={{ uri: item.cloudId }}  style={{ width: 40, height: 70, borderRadius: 8 }}/>
+                                <Image source={{ uri: item.body_part }}  style={{ width: 40, height: 70, borderRadius: 8 }}/>
                             </View>
                             <View>
                                 <Text>{" "}</Text>
@@ -166,7 +191,7 @@ const Photo = () => {
                                 <Text className='text-slate-400 text-md'>{item.createdAt}</Text>
                             </View>
                             <View className='content-end ml-[35] justify-center'>
-                                <ButtonGlue onPress={navigateToMoleDetails}>
+                                <ButtonGlue onPress={() => navigateToMoleDetails(index)}>
                                     <ButtonText>
                                         View
                                     </ButtonText>
@@ -184,6 +209,20 @@ const Photo = () => {
                 <ButtonText className='font-extrabold text-lg'>Add new spot</ButtonText>
             </ButtonGlue>
             </View>
+
+            <ModalComponent
+            isOpen={showModal}
+            onClose={() => setShowModal(false)}
+            titleContent="Missing FitzPatrick Data"
+            bodyContent="You need to complete your FitzPatrick profile before adding a spot."
+            primaryButtonText="Go to Profile"
+            secondaryButtonText="Cancel"
+            primaryButtonAction={() => {
+                setShowModal(false);
+                router.push("/(app)/(tabs)/(settings)"); // or your profile route
+                }}
+                secondaryButtonAction={() => setShowModal(false)}
+            />
         </View>
     )
 }

@@ -1,4 +1,4 @@
-import { View, Text } from 'react-native';
+import { View, Text, ScrollView } from 'react-native';
 import React, { useState } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -25,15 +25,15 @@ const Signup = () => {
   const [code, setCode] = useState('');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [codeRequested, setCodeRequested] = useState(false);
 
   const handleSubmitRequest = async() => {
     try {
       console.log('Executing handle submit request');
-      console.log("Username: ", username);
-      console.log("Email: ", email);
-
+      
       if (code === '') {
-        setModalMessage('Missing verificiation code!');
+        setModalMessage('Missing verification code!');
         setIsModalOpen(true);
         return;
       }
@@ -56,6 +56,8 @@ const Signup = () => {
         return;
       }
 
+      setIsLoading(true);
+      
       const result = await fetch(`${API_URL}/v1/new/account`, {
         method: "POST",
         headers: {
@@ -69,6 +71,7 @@ const Signup = () => {
       });
 
       const data = await result.json();
+      setIsLoading(false);
 
       if (data.success == true) {
         setModalMessage("Account created successfully");
@@ -78,16 +81,28 @@ const Signup = () => {
         setPassword('');
         setEmail('');
         setCode('');
+        setCodeRequested(false);
+      } else {
+        setModalMessage(data.message || "Failed to create account");
+        setIsModalOpen(true);
       }
-
-      // Proceed with signup request here
     } catch (error) {
+      setIsLoading(false);
+      setModalMessage("An error occurred. Please try again.");
+      setIsModalOpen(true);
       console.error(error);
     }
   };
 
   const handleGenerateCodeRequest = async() => {
+    if (!email || !email.includes('@')) {
+      setModalMessage('Please enter a valid email address');
+      setIsModalOpen(true);
+      return;
+    }
+    
     try {
+      setIsLoading(true);
       const response = await fetch(`${API_URL}/v1/code/account`, {
         method: "POST",
         headers: {
@@ -99,10 +114,17 @@ const Signup = () => {
       });
 
       const data = await response.json();
+      setIsLoading(false);
       console.log('Verification code', data.code);
 
       setVerificationCode(data.code);
+      setCodeRequested(true);
+      setModalMessage('Verification code sent to your email');
+      setIsModalOpen(true);
     } catch (error) {
+      setIsLoading(false);
+      setModalMessage("Failed to generate verification code");
+      setIsModalOpen(true);
       console.error("Error @ handle generate code", error);
     }
   }
@@ -110,64 +132,142 @@ const Signup = () => {
   const handleBackRequest = () => {
     router.navigate('/sign-in');
   }
+  
+  const ModalAny = Modal as any;
   return ( 
-    <SafeAreaView>
-      <View>
-        <Input size='md' className='mt-3'>
-          <Text>Username: </Text>
-          <InputField type='text' value={username} onChangeText={setUsername} placeholder='e.g JohnDoe' />
-        </Input>
+    <SafeAreaView className="flex-1 bg-gray-50">
+      <ScrollView className="flex-1">
+        <View className="px-4 py-6">
+          <Text className="text-2xl font-bold text-center mb-6 text-gray-800">
+            Create Account
+          </Text>
+          
+          <View className="bg-white rounded-xl p-6 shadow-md mb-4">
+            <View className="space-y-4">
+              <View>
+                <Text className="text-gray-700 font-medium mb-1">Username</Text>
+                <Input size='md' className="rounded-lg border border-gray-200">
+                  <InputField 
+                    type='text' 
+                    value={username} 
+                    onChangeText={setUsername} 
+                    placeholder='e.g JohnDoe' 
+                    className="p-2"
+                  />
+                </Input>
+              </View>
 
-        <Input className='mt-3'>
-          <Text>Email: </Text>
-          <InputField type='text' value={email} onChangeText={setEmail} placeholder='e.g JohnDoe@gmail.com' />
-        </Input>
+              <View>
+                <Text className="text-gray-700 font-medium mb-1">Email</Text>
+                <Input className="rounded-lg border border-gray-200">
+                  <InputField 
+                    type='text' 
+                    value={email} 
+                    onChangeText={setEmail} 
+                    placeholder='e.g JohnDoe@gmail.com' 
+                    className="p-2"
+                  />
+                </Input>
+              </View>
 
-        {email != '' ?
-          <ButtonGlue onPress={handleGenerateCodeRequest}>
-            <ButtonText>Generate verification code</ButtonText>
-          </ButtonGlue>
-        :
-          <></>
-        }
+              {email != '' && (
+                <ButtonGlue 
+                  onPress={handleGenerateCodeRequest}
+                  disabled={isLoading}
+                  className={`rounded-lg py-3 h-12 w-full ${codeRequested ? 'bg-green-500' : 'bg-blue-500'}`}
+                >
+                  <ButtonText className="font-medium text-white">
+                    {isLoading ? 'Sending...' : codeRequested ? 'Resend Code' : 'Generate Verification Code'}
+                  </ButtonText>
+                </ButtonGlue>
+              )}
 
-        <Input>
-          <Text>Code: </Text>
-          <InputField type='text' value={code} onChangeText={setCode}/>
-        </Input>
+              <View>
+                <Text className="text-gray-700 font-medium mb-1">Verification Code</Text>
+                <Input className="rounded-lg border border-gray-200">
+                  <InputField 
+                    type='text' 
+                    value={code} 
+                    onChangeText={setCode}
+                    placeholder="Enter verification code"
+                    className="p-2"
+                  />
+                </Input>
+              </View>
 
-        <Input className='mt-3'>
-          <Text>Password: </Text>
-          <InputField type='password' value={password} onChangeText={setPassword} />
-        </Input>
+              <View>
+                <Text className="text-gray-700 font-medium mb-1">Password</Text>
+                <Input className="rounded-lg border border-gray-200">
+                  <InputField 
+                    type='password' 
+                    value={password} 
+                    onChangeText={setPassword}
+                    placeholder="Enter password"
+                    className="p-2"
+                  />
+                </Input>
+              </View>
 
-        <Input className='mt-3'>
-          <Text>Confirm Password: </Text>
-          <InputField type='password' value={confirmPassword} onChangeText={setConfirmPassword} />
-        </Input>
+              <View>
+                <Text className="text-gray-700 font-medium mb-1">Confirm Password</Text>
+                <Input className="rounded-lg border border-gray-200">
+                  <InputField 
+                    type='password' 
+                    value={confirmPassword} 
+                    onChangeText={setConfirmPassword}
+                    placeholder="Confirm your password"
+                    className="p-2"
+                  />
+                </Input>
+              </View>
+            </View>
+          </View>
+          
+          <View className="space-y-3">
+            <ButtonGlue 
+              onPress={handleSubmitRequest}
+              disabled={isLoading}
+              className="rounded-lg py-4 h-14 bg-blue-500 w-full"
+            >
+              <ButtonText className="font-semibold text-base text-white">
+                {isLoading ? 'Creating Account...' : 'Create Account'}
+              </ButtonText>
+            </ButtonGlue>
 
-        <ButtonGlue onPress={handleSubmitRequest}>
-          <ButtonText>Submit</ButtonText>
-        </ButtonGlue>
-
-        <ButtonGlue onPress={handleBackRequest}>
-          <ButtonText>Back</ButtonText>
-        </ButtonGlue>
-      </View>
+            <ButtonGlue 
+              onPress={handleBackRequest}
+              className="rounded-lg py-3 h-12 bg-gray-200 w-full mt-2"
+            >
+              <ButtonText className="font-medium text-gray-800">
+                Back to Sign In
+              </ButtonText>
+            </ButtonGlue>
+          </View>
+        </View>
+      </ScrollView>
 
       {/* Modal always mounted, only shown if open */}
       {isModalOpen && (
-        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+        <ModalAny isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
           <ModalBackdrop />
-          <ModalContent>
+          <ModalContent className="bg-white rounded-xl p-4 mx-4">
             <ModalHeader>
-              <ModalCloseButton onPress={() => setIsModalOpen(false)} > </ModalCloseButton>
+              <Text className="text-lg font-bold">Notification</Text>
+              <ModalCloseButton onPress={() => setIsModalOpen(false)}>
+                <Text className="text-gray-500 text-xl">×</Text>
+              </ModalCloseButton>
             </ModalHeader>
             <ModalBody>
-              <Text>{modalMessage}</Text>
+              <Text className="text-center py-2">{modalMessage}</Text>
+              <ButtonGlue
+                onPress={() => setIsModalOpen(false)}
+                className="mt-4 rounded-lg py-2 bg-blue-500"
+              >
+                <ButtonText className="text-white">OK</ButtonText>
+              </ButtonGlue>
             </ModalBody>
           </ModalContent>
-        </Modal>
+        </ModalAny>
       )}
     </SafeAreaView>
   );

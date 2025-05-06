@@ -41,8 +41,9 @@ const ModalComponent: React.FC<ModalComponentProps> = ({
     primaryButtonAction,
     secondaryButtonAction
 }) => {
+    const ModalAny = Modal as any;
   return (
-    <Modal 
+    <ModalAny 
         isOpen={isOpen} 
         avoidKeyboard={isAvoidKeyboard} 
         closeOnOverlayClick={closeOnOverlayClick} 
@@ -65,7 +66,7 @@ const ModalComponent: React.FC<ModalComponentProps> = ({
                 </ButtonGlue>
             </ModalFooter>
         </ModalContent>
-    </Modal>
+    </ModalAny>
   )
 }
 
