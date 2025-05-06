@@ -3,6 +3,7 @@ import cors from "cors";
 import dotenv from "dotenv";
 import accountRouter from "./routes/account.route";
 import mole_metadata_router from "./routes/mole_metadata.route"
+import fitzpatrickRouter from "./routes/fitzpatrick.route"
 import { errorHandler } from "./middlewares/error.middleware";
 // Loads .env variables into process.env
 dotenv.config();
@@ -21,6 +22,7 @@ app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
 app.use(accountRouter);
 app.use(mole_metadata_router);
+app.use(fitzpatrickRouter);
 
 app.get("/test", (req, res) => {
     res.send("Backend is running!");

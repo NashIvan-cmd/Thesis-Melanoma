@@ -30,13 +30,21 @@ model Mole_Assessment {
 
 model User_FitzPatrick {
   id             String        @id @default(dbgenerated("gen_random_uuid()"))
-  hair_color     String
-  eye_color      String
+  hair_color     Int
+  eye_color      Int
   age            Int
-  skin_tone      String
+  skin_tone      Int
+  freckles       Int
+  skinSunReaction Int
+  turnBrownDegree Int
+  sunExposureTurnBrown Int
+  faceReaction   Int
+  bodyLastSunExposure Int
+  exposedFaceToSun Int
   immune_health  String?
   gender         String
   genetics       String?
+  skinType       String
   user_account_foreignkey String @unique
   User_Account   User_Account @relation(fields: [user_account_foreignkey], references: [id])
 }
