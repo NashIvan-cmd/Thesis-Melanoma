@@ -1,4 +1,4 @@
-import { View, Text, ScrollView, Linking, Alert, StyleSheet, FlatList } from 'react-native'
+import { View, Text, SafeAreaView , ScrollView, Linking, Alert, StyleSheet, FlatList } from 'react-native'
 import { useFocusEffect } from 'expo-router';
 import { Image } from 'expo-image';
 import { Link, useRouter } from 'expo-router';
@@ -18,6 +18,7 @@ import ModalComponent from '@/components/Modal';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 
+import { formatDate } from '@/services/formatDate';
 import { useSession } from '@/services/authContext';
 import { moleData, molesToDisplay } from '@/api/moleData';
 import { useMoleDataStore } from '@/services/moleStore';
@@ -45,6 +46,7 @@ const Photo = () => {
     const [molesArray, setMolesArray] = useState([]);
     const ref = useRef<CameraView>(null);
     const [showModal, setShowModal] = useState(false);
+    const [showModalV1, setShowModalV1] = useState(false);
 
 
     const router = useRouter();
@@ -105,56 +107,24 @@ const Photo = () => {
     //     )
     // }
 
-    const renderPhoto = () => {
-        return(
-            <View className='flex-1'>
-            <Image source={{ uri }}  
-            contentFit="contain"
-            style={{ width: 300, aspectRatio: 1 }}
-            />
-            </View> 
-        )
-    }
-
-    const renderCamera = () => {
-        return(
-            <CameraView 
-                style={{ height: 600 }}
-                facing={facing}
-                enableTorch={true}
-                autofocus='on'
-                ref={ref}
-            >
-                <View>
-                    <Pressable onPress={takePicture}>
-                        {({ pressed }) => (
-                            <View>
-                                {pressed ? 
-                                    <MaterialIcons name="radio-button-on" size={84} color="black" />
-                                    :
-                                    <Ionicons name="radio-button-on" size={94} color="black" />
-                                }
-                          </View>
-                        )}
-                    </Pressable>
-                </View>
-            </CameraView>
-        )
-    }
-
     const navigateToAddSpot = async() => {
         try {
-            const checkFitzData = await fetch(`${API_URL}/v1/check?userId=${userId}`, {
+            const checkUserFitzAndAgreement = await fetch(`${API_URL}/v1/check?userId=${userId}`, {
                 method: "GET"
             })
 
-            console.log({ checkFitzData });
-            const data = await checkFitzData.json();
+            console.log({ checkUserFitzAndAgreement });
+            const data = await checkUserFitzAndAgreement.json();
 
             console.log(data);
             if (!data || !data.record) {
                 setShowModal(true);
                 return;
+            }
+
+            if (!data.agreement) {
+                setShowModalV1(true);
+                return
             }
 
             router.push('/(app)/(tabs)/(photo)/addSpot_screen'); // Adjust this based on your tab structure
@@ -170,60 +140,79 @@ const Photo = () => {
     }
 
     return (
-        <View className='flex-1 bg-custom-dark p-[20]'>
-            <Text>Of the Goodness of God</Text>
-            <View>
-                <FlatList<Mole>
-                    data={molesArray}  // Replace with actual data
-                    keyExtractor={(_, index) => index.toString()}
-                    showsVerticalScrollIndicator={false}
-                    renderItem={({ item, index }) => (
-                        <View key={index} className='flex flex-row h-[90] w-full bg-slate-600/80 p-[10] mt-[5] rounded'>
-                            <View className="min-h-[40px] min-w-[40px] bg-orange-500 mr-[10] rounded">
-                                <Image source={{ uri: item.body_part }}  style={{ width: 40, height: 70, borderRadius: 8 }}/>
+        <SafeAreaView className="flex-1">
+            <View className='flex-1 bg-slate-50 p-[20]'>
+                <Text className="text-2xl font-bold text-blue-800 mb-2">Skin Lesion Records</Text>
+                <Text className="text-xs text-slate-500 mb-1">Scroll to view all records</Text>
+                <View className="flex-1">
+                    <FlatList<Mole>
+                        data={molesArray}  // Replace with actual data
+                        keyExtractor={(_, index) => index.toString()}
+                        showsVerticalScrollIndicator={true}
+                        indicatorStyle="black"
+                        renderItem={({ item, index }) => (
+                            <View key={index} className='flex flex-row h-[90] w-full bg-white border border-slate-200 p-[10] mt-[5] rounded-lg shadow-sm'>
+                                <View className="h-16 w-16 bg-blue-100 mr-[10] rounded-md overflow-hidden">
+                                    <Image source={{ uri: item.body_part }} style={{ width: 64, height: 64, borderRadius: 8 }}/>
+                                </View>
+                                <View>
+                                    <Text>{" "}</Text>
+                                </View>
+                                <View className='ml-[10]'>
+                                    <Text className="text-slate-800 font-medium text-md">{item.body_part}</Text>
+                                    <Text className='text-slate-400 text-md'></Text>
+                                    <Text className='text-blue-700 text-sm'>{formatDate(item.createdAt)}</Text>
+                                </View>
+                                <View className='content-end ml-[35] justify-center'>
+                                    <ButtonGlue onPress={() => navigateToMoleDetails(index)} className="bg-blue-600 px-3 py-1 rounded-md">
+                                        <ButtonText className="text-white font-medium">
+                                            View
+                                        </ButtonText>
+                                    </ButtonGlue>
+                                </View>
                             </View>
-                            <View>
-                                <Text>{" "}</Text>
-                            </View>
-                            <View className='ml-[10]'>
-                                <Text className="text-slate-400 text-md">{item.body_part}</Text>
-                                <Text className='text-slate-400 text-md'></Text>
-                                <Text className='text-slate-400 text-md'>{item.createdAt}</Text>
-                            </View>
-                            <View className='content-end ml-[35] justify-center'>
-                                <ButtonGlue onPress={() => navigateToMoleDetails(index)}>
-                                    <ButtonText>
-                                        View
-                                    </ButtonText>
-                                </ButtonGlue>
-                            </View>
-                        </View>
-                    )}
-                    style={{ minHeight: '90%', maxHeight: '90%' }}
+                        )}
+                        style={{ minHeight: '90%', maxHeight: '90%' }}
+                        ListFooterComponent={<View className="h-10 border-t border-dashed border-slate-200 mt-2"><Text className="text-center text-xs text-slate-400 mt-2">End of Records</Text></View>}
+                    />
+                    {/*Some sort of array here*/}
+                </View>
+                
+                <View>
+                <ButtonGlue onPress={navigateToAddSpot} size='xl' className='bg-blue-600 mt-[10] rounded-lg shadow-sm'>
+                    <ButtonText className='font-extrabold text-lg text-white'>Add new mole spot</ButtonText>
+                </ButtonGlue>
+                </View>
+    
+                <ModalComponent
+                isOpen={showModal}
+                onClose={() => setShowModal(false)}
+                titleContent="Missing FitzPatrick Data"
+                bodyContent="You need to complete your FitzPatrick profile before adding a spot."
+                primaryButtonText="Go to Settings"
+                secondaryButtonText="Cancel"
+                primaryButtonAction={() => {
+                    setShowModal(false);
+                    router.push("/(app)/(tabs)/(settings)"); // or your profile route
+                    }}
+                    secondaryButtonAction={() => setShowModal(false)}
                 />
-                {/*Some sort of array here*/}
-            </View>
-            
-            <View>
-            <ButtonGlue onPress={navigateToAddSpot} size='xl' className='bg-orange-500 mt-[10]'>
-                <ButtonText className='font-extrabold text-lg'>Add new spot</ButtonText>
-            </ButtonGlue>
-            </View>
+                <ModalComponent
+                isOpen={showModalV1}
+                onClose={() => setShowModalV1(false)}
+                titleContent="User Agreement"
+                bodyContent="You need to agree to the App policy and terms"
+                primaryButtonText="Go to Settings"
+                secondaryButtonText="Cancel"
+                primaryButtonAction={() => {
+                    setShowModalV1(false);
+                    router.push("/(app)/(tabs)/(settings)"); // or your profile route
+                    }}
+                    secondaryButtonAction={() => setShowModalV1(false)}
+                />
 
-            <ModalComponent
-            isOpen={showModal}
-            onClose={() => setShowModal(false)}
-            titleContent="Missing FitzPatrick Data"
-            bodyContent="You need to complete your FitzPatrick profile before adding a spot."
-            primaryButtonText="Go to Profile"
-            secondaryButtonText="Cancel"
-            primaryButtonAction={() => {
-                setShowModal(false);
-                router.push("/(app)/(tabs)/(settings)"); // or your profile route
-                }}
-                secondaryButtonAction={() => setShowModal(false)}
-            />
-        </View>
+            </View>
+        </SafeAreaView>
     )
 }
 

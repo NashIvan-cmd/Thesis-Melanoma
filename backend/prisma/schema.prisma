@@ -14,6 +14,7 @@ model User_Account {
   password            String
   refreshToken        String?
   createdAt           DateTime         @default(now())
+  policyAgreement     Boolean          @default(false)
   Mole_MetaData       Mole_MetaData[]
   User_FitzPatrick User_FitzPatrick?
 }

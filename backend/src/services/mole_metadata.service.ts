@@ -98,7 +98,8 @@ export const getCloudinaryImageById = (moleId: string[]) => {
 export const getAllMoleByUserId = async(userId: string): Promise<object[]> => {
     try {
         const result = await prisma.mole_MetaData.findMany({
-            where: { mole_owner: userId }
+            where: { mole_owner: userId },
+            orderBy: { createdAt: 'desc' }
         })
 
         return result

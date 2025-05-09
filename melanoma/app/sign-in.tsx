@@ -17,6 +17,10 @@ export default function SignIn() {
     router.navigate('/sign-up');
   }
 
+  const handleForgotPassword = () => {
+
+  }
+
   useEffect(() => {
     const timeoutId = setTimeout(() => {
       console.log({ username, password });
@@ -32,7 +36,7 @@ export default function SignIn() {
       <View className="flex-1 justify-center items-center bg-gray-50 px-4">
         <View className="w-full max-w-md bg-white rounded-xl p-6 shadow-md">
           <Text className="text-2xl font-bold text-center mb-6 text-gray-800">
-            Medical App Sign In
+            Melanoma App
           </Text>
           
           <View className="space-y-4">
@@ -82,9 +86,9 @@ export default function SignIn() {
                   const boolRes = await signIn(username, password);
                   
                   console.log("Boolean Result", boolRes);
-                  
                   if (boolRes) {
-                    router.replace('/');
+                    console.log("replacing the route");
+                    router.replace("/");
                   } else {
                     setError("Invalid username or password");
                     console.log("Wrong credentials");
@@ -98,11 +102,17 @@ export default function SignIn() {
               <ButtonText className="font-semibold text-base">Sign In</ButtonText>
             </ButtonGlue>
           </View>
-          
+
           <View className="flex-row justify-center items-center mt-6 space-x-1">
+            <TouchableOpacity onPress={handleForgotPassword}>
+              <Text className="text-blue-500 font-semibold">Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+          
+          <View className="flex-row justify-center items-center mt-2 space-x-1">
             <Text className="text-gray-600">No account yet?</Text>
             <TouchableOpacity onPress={handleSignUpRequest}>
-              <Text className="text-blue-500 font-semibold">Sign Up</Text>
+              <Text className="text-blue-500 font-semibold"> Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>

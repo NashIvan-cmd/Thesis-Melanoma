@@ -1,12 +1,13 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 // import jwt from "jsonwebtoken";
-import { findUser } from "../services/account.service";
+import { checkUserAgreement, findUser, findUserPassword, changePassword } from "../services/account.service";
 import { emailVerificationLogic, generateSimpleVerificationCode, hashPassword } from "../utils/account.utils";
 import { accessTokenGenerator, refreshTokenGenerator } from "../middlewares/auth.middleware";
 
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
+import { NotFoundError, ValidationError } from "../middlewares/error.middleware";
 
 const prisma = new PrismaClient();
 
@@ -150,3 +151,76 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
         
 //     }
 // }
+
+export const agreementToTerms = async(req: Request, res: Response, next: NextFunction) => {
+    const { boolAns, id } = req.body;
+    console.log("agreement to terms req", boolAns);
+    try {
+        
+        if (boolAns == false) {
+            res.status(200).json({
+                success: false,
+                message: "You must agree to the terms to use the app core features"
+            })
+            return;
+        }
+
+        await prisma.user_Account.update({
+            where: { id },
+            data: {
+                policyAgreement: boolAns
+            }
+        })
+
+        res.status(200).json({
+            success: true,
+            message: "You are now ready to use the app core features"
+        })
+    } catch (error) {
+        next (error);
+    }
+}
+
+export const checkAgreementController = async(req: Request, res: Response, next: NextFunction) => {
+    const { userId } = req.query
+    try {
+
+        if (!userId) {
+            throw new ValidationError("Missing user Id")
+        } 
+
+        const parsedId = userId.toString();
+        const result = await checkUserAgreement(parsedId);
+
+        res.status(200).json({
+            result
+        })
+    } catch (error) {
+        next (error);
+    }
+}
+
+export const changePasswordController = async(req: Request, res: Response, next: NextFunction) => {
+    const { userId, oldPassword, newPassword } = req.body;
+    console.log("Change password", req.body);
+    try {
+        const getOldPassword = await findUserPassword(userId);
+
+        if (!getOldPassword) throw new NotFoundError("User is not found");
+
+        const hashedPassword = hashPassword(getOldPassword);
+        if (oldPassword != hashedPassword) {
+            res.status(406).json({ success: false, message: "Passwords does not match into database" });
+            return;
+        }
+
+        const newHashedPassword = hashPassword(newPassword);
+        const result = await changePassword(userId, newHashedPassword);
+
+        if (result) {
+            res.status(200).json({ success: true, message: "Password changed"})
+        }
+    } catch (error) {
+        next (error);
+    }
+}

@@ -9,6 +9,8 @@ const AuthContext = createContext<{
   session?: string | null;
   accessToken?: string | null;
   userId?: string | null;
+  username?: string | null;
+  email?: string | null;
   isLoading: boolean;
 }>({
   signIn: async (): Promise<boolean> => false,
@@ -16,6 +18,8 @@ const AuthContext = createContext<{
   session: null,
   accessToken: null,
   userId: null,
+  username: null,
+  email: null,
   isLoading: false,
 });
 
@@ -36,6 +40,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
   const [[isLoading, session], setSession] = useStorageState('session');
   const [[isX, accessToken], setAccessToken] = useStorageState('accessToken');
   const [[isY, userId], setUserId] = useStorageState("userId");
+  const [[isZ, username], setUsername] = useStorageState("username");
+  const [[isA, email], setEmail] = useStorageState("email");
   console.log("Session value ", session);
   console.log({ accessToken, userId });
 
@@ -65,9 +71,15 @@ export function SessionProvider({ children }: PropsWithChildren) {
              console.log("Server response", result.status);
               if (result.status == 202) {
                 setSession(data.refreshToken);
-                // console.log("What is happening to AT", data.accessToken);
+                // // console.log("What is happening to AT", data.accessToken);
                 setAccessToken(data.accessToken);
                 setUserId(data.userId);
+                setUsername("John Kenneth Doe");
+                setEmail("JohnDoe@gmail.com");
+
+                // setSession("abs");
+                // setAccessToken("abs");
+                // setUserId("abs");
                 return true;
               }
               return false;
@@ -85,6 +97,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
         session,
         accessToken,
         userId,
+        username,
+        email,
         isLoading
       }}>
       {children}

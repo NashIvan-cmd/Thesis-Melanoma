@@ -4,7 +4,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '@env';
 import * as ImagePicker from 'expo-image-picker';
 
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-camera';
 import { Image } from 'expo-image';
 
 import { Pressable } from '@/components/ui/pressable';
@@ -14,6 +14,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Entypo from '@expo/vector-icons/Entypo';
 
+import { useIsFocused } from '@react-navigation/native';
 import ModalComponent from '@/components/Modal';
 import { router } from 'expo-router';
 import { useSession } from '@/services/authContext';
@@ -34,7 +35,10 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
     const ref = useRef<CameraView>(null);
     const [showModal, setShowModal] = useState<boolean>(false);
     const [zoom, setZoom] = useState(0.8);
-    const [torchOn, setTorchOn] = useState(true);
+    const [torchEnabled, setTorchEnabled] = useState(true);
+    
+    // This hook tells us if the screen is currently focused
+    const isFocused = useIsFocused();
 
     const takePicture = async () => {
         try {
@@ -45,23 +49,18 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
             }
             console.log("All image metadata", photo);
             
-            // let photo2 = { 
-            //     uri: photo.uri,
-            //     width: photo.width,
-            //     height: photo.height
-            // }
-
-            // if (Platform.OS == "ios") {
-            //     photo2 =  await manipulateIosImage(photo.uri, photo.height, photo.width);
-            // }
             setUri(photo.uri);
             setImageData(photo.uri);
+            router.navigate("/(app)/(tabs)/(photo)/imageSourceSelect")
         } catch (error) {
             console.error("Error @ take picture", error);
         }
-       
     }
 
+    const handleGoBack = () => {
+        router.navigate("/(app)/(tabs)/(photo)/addSpot_screen");
+    }
+    
     const pickImage = async () => {
         const result = await ImagePicker.launchImageLibraryAsync({
           mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -79,23 +78,31 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
         }
     };
 
+    // Initialize camera and handle torch stability
     useEffect(() => {
-    //   console.log('Uri State', uri);  
-      console.log('Show modal state', showModal);
-    }, [uri]);
+        let mounted = true;
+        
+        if (isFocused && ref.current) {
+            // Small delay to ensure the camera is fully mounted before enabling torch
+            const initTimer = setTimeout(() => {
+                if (mounted) {
+                    setTorchEnabled(true);
+                }
+            }, 300);
+            
+            return () => {
+                mounted = false;
+                clearTimeout(initTimer);
+                console.log('Camera component unmounting');
+            };
+        }
+    }, [isFocused]);
     
-    const convertToBase64 = async (uri: string): Promise<string> => {
-        const response = await fetch(uri);
-        const blob = await response.blob();
-      
-        return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onloadend = () => resolve(reader.result as string); // data:image/jpeg;base64,...
-          reader.onerror = reject;
-          reader.readAsDataURL(blob);
-        });
-      };
-
+    // Prevent unnecessary re-renders that might cause torch blinking
+    const takePictureStable = React.useCallback(async () => {
+        await takePicture();
+    }, []);
+    
     const retakePicture = () => {
         setShowModal(false);
         setUri(null);
@@ -121,74 +128,71 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
 
     return(
         <>
-        {uri ? (
-                <View className='flex-1 w-100'>
-                    <Image source={uri} style={{ width: '100%', height: '60%' }} />
-                    
-                    <View className='w-80 mt-auto self-center'>
-                        <ButtonGlue className='w-100 h-14 mb-1' onPress={navigateToImagePreview} >
-                            <ButtonText>
-                                Next
-                            </ButtonText>
-                        </ButtonGlue>
-                        <ButtonGlue className='w-100 h-14 mb-1' onPress={handleCancelRequest}>
-                            <ButtonText>
-                                Cancel
-                            </ButtonText>
-                        </ButtonGlue>
-                    </View>
-                    <ModalComponent 
-                        isOpen={showModal} 
-                        isAvoidKeyboard={true} 
-                        closeOnOverlayClick={true} 
-                        bodyContent='Lorem Ipsum Melanoma'
-                        onClose={() => setShowModal(false)}
-                        primaryButtonText='Retake Picture'
-                        secondaryButtonText='Go to Home'
-                        primaryButtonAction={retakePicture}
-                        secondaryButtonAction={goToHome}
-                    />
-                </View>
-            )    
-            : 
-            (
-                <>
-                {   
+                {/* Only render camera when screen is focused */}
+                {isFocused ? (
+                    <>
+                    <CameraView 
+                        style={{ height: '88%' }}
+                        facing={facing}
+                        enableTorch={torchEnabled}
+                        autofocus={Platform.OS == "ios" ? 'off' : 'on'}
+                        zoom={zoom}
+                        ref={ref}
+                        >
+                        {/* Safe space for back button with padding */}
+                        <View className="pt-12 pl-4">
+                            <Pressable onPress={handleGoBack}>
+                            <Entypo name="chevron-left" size={44} color="white" />
+                            </Pressable>
+                        </View>
+                        
+                        {/* Center targeting circle */}
+                        <View className="flex-1 items-center justify-center">
+                            <View className="items-center">
+                            <Entypo name="circle" size={80} color="white" />
+                            </View>
+                        </View>
+                        
+                        {/* Guidelines text overlay */}
+                        <View className="bg-black bg-opacity-50 w-full px-4 py-3 mb-4">
+                            <Text className="text-white text-center text-lg font-semibold">
+                            Position Guidelines:
+                            </Text>
+                            <Text className="text-white text-center">
+                            • Hold camera 10-20cm from skin
+                            </Text>
+                            <Text className="text-white text-center">
+                            • Center the mole inside the circle
+                            </Text>
+                            <Text className="text-white text-center">
+                            • Ensure good lighting for clear image
+                            </Text>
+                        </View>
+                    </CameraView>
 
-                }
-                <CameraView 
-                style={{ height: '80%' }}
-                facing={facing}
-                enableTorch={torchOn}
-                autofocus={ Platform.OS == "ios" ? 'off' : 'on' }
-                zoom={zoom}
-                ref={ref}
-                >
-                    <View>
-                        <Entypo name="chevron-left" size={44} color="black" className='mt-2' />
-                    </View>
-                    <View className='items-center mt-40'>
-                        <MaterialIcons name="center-focus-weak" size={244} color="black" />
-                    </View>
-                </CameraView>
-                <View className='flex-1 items-center justify-center bg-custom-dark'>
-                    <Pressable onPress={takePicture}>
-                        {({ pressed }: { pressed: boolean }) => (
+                    {/* Bottom controls with torch toggle and capture button */}
+                    <View className="h-24 flex-row items-center justify-center bg-custom-dark">
+                        {/* Capture button */}
+                        <Pressable onPress={takePictureStable}>
+                            {({ pressed }) => (
                             <View>
                                 {pressed ? 
-                                    <MaterialIcons name="radio-button-on" size={84} color="black" />
-                                    :
-                                    <Ionicons name="radio-button-on" size={94} color="black" />
+                                <MaterialIcons name="radio-button-on" size={74} color="white" />
+                                :
+                                <Ionicons name="radio-button-on" size={84} color="white" />
                                 }
-                        </View>
-                        )}
-                    </Pressable>
-                </View>
+                            </View>
+                            )}
+                        </Pressable>
+                    </View>
+                    </>
+                ) : (
+                    <View className="flex-1 items-center justify-center bg-custom-dark">
+                        <Text className="text-white text-lg">Loading camera...</Text>
+                    </View>
+                )}
                 </>
-            )
-        }
-        </>
     )
 }
 
-export default RenderCamera
+export default RenderCamera;

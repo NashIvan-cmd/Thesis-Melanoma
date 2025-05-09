@@ -294,22 +294,22 @@ const AddSpot_screen = () => {
             </View>
           </Animated.View>
           <View className='mb-1 items-center'>
-            <ButtonGlue className="bg-orange-500 rounded-lg" onPress={toggleBodyPostion}>
-                <ButtonText>{bodyPosition}</ButtonText>
+            <ButtonGlue className="bg-teal-600 rounded-lg" onPress={toggleBodyPostion}>
+              <ButtonText>{bodyPosition}</ButtonText>
             </ButtonGlue>
           </View>
           <View className='w-full mt-auto mb-1 rounder-lg'>
-            <ButtonGlue onPress={handleAddSpotRequest}>
+            <ButtonGlue className="bg-blue-600 rounded-lg" onPress={handleAddSpotRequest}>
               <ButtonText>
                 Add Spot
               </ButtonText>
-          </ButtonGlue>
+            </ButtonGlue>
           </View>
-          <View className="w-full bg-slate-600/80 mt-auto items-center rounded-lg p-[4]">
-            <Text>Drag the pin to indicate mole spot</Text>
-            <Text>
-                <MaterialCommunityIcons name="gesture-pinch" size={24} color="black" />
-                Pinch to zoom
+          <View className="w-full bg-slate-400 mt-auto items-center rounded-lg p-[4] border border-slate-300">
+            <Text className="text-slate-700">Drag the pin to indicate mole spot</Text>
+            <Text className="text-slate-700">
+              <MaterialCommunityIcons name="gesture-pinch" size={24} color="#334155" />
+              Pinch to zoom
             </Text>
           </View>
         </View>

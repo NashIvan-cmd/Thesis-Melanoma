@@ -1,6 +1,7 @@
 import { Response, Request, NextFunction } from "express";
 import { checkExistingFitzPatrickRecord, createFitzPatrick, updateFitzPatrick } from "../services/fitzpatrick.service";
 import { ValidationError } from "../middlewares/error.middleware";
+import { checkUserAgreement } from "../services/account.service";
 
 export const fitzPatrickController = async(req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body;
@@ -30,7 +31,8 @@ export const fitzPatrickController = async(req: Request, res: Response, next: Ne
     }
 }
 
-export const getFitzPatrickId = async(req: Request, res: Response, next: NextFunction) => {
+// Validate for agreement and fitzpatrick
+export const validateForCoreFeatures = async(req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.query
     console.log("Req query", req.query);
     try {
@@ -40,9 +42,11 @@ export const getFitzPatrickId = async(req: Request, res: Response, next: NextFun
 
         const parsedId = userId.toString();
         const record = await checkExistingFitzPatrickRecord(parsedId);
+        const agreement = await checkUserAgreement(parsedId);
 
         res.status(200).json({
-            record
+            record,
+            agreement
         })
     } catch (error) {
         next (error);

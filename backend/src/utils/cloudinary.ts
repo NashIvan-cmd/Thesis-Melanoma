@@ -70,6 +70,3 @@ export const signedUrlGenerator = async(arr: MoleData[]): Promise<MoleData[]> =>
     return arr;
   }
 }
-  
-
-

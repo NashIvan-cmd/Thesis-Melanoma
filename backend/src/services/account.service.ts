@@ -35,3 +35,51 @@ export const findUser = async(username: string, password: string) => {
         throw error;
     }
 }
+
+
+export const checkUserAgreement = async(userId: string) => {
+    try {
+        if (!userId) {
+            throw new ValidationError("User Id missing");
+        }
+
+        const userAgreement = await prisma.user_Account.findUnique({
+            where: { id: userId },
+            select: { policyAgreement: true }
+        })
+
+        console.log("User agreement", userAgreement);
+        return userAgreement;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const findUserPassword = async(id: string) => {
+    try {
+        const userPass = await prisma.user_Account.findUnique({
+            where: { id: id },
+            select: { password: true }
+        })
+
+        const password = userPass?.password;
+        console.log("Pass", password);
+        
+        return password;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const changePassword = async(id: string, newPassword: string) => {
+    try {
+        const result = await prisma.user_Account.update({
+            where: { id },
+            data: { password: newPassword },
+        })
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
