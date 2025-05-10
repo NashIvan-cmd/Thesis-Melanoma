@@ -1,9 +1,11 @@
 import { Prisma, PrismaClient, BodyPart } from "@prisma/client"
-import { NotFoundError, ValidationError } from "../middlewares/error.middleware";
+import { DatabaseError, NotFoundError, ValidationError } from "../middlewares/error.middleware";
 import { cloudinaryUpload } from "../utils/cloudinary";
 import { isBodyPart } from "../utils/mole_metadata.utils";
+import { I_Asessment } from "../controllers/mole_metadata.controller";
 
 const prisma = new PrismaClient();
+
 
 export const fetchMole = async(mole_Id: string) => {
     try {
@@ -61,13 +63,69 @@ export const createMoleMetadata = async(
     }
 }
 
-//create assessment
-export const createAssessment = async() => {
+// id               String        @id @default(dbgenerated("gen_random_uuid()"))
+//   risk_assessment  Int         // This will be for the assessment score
+//   risk_summary     String      // For the NLP output
+//   model_assessment String      // benign or malignant
+//   createdAt        DateTime      @default(now())
+//   mole_id          String
+//   mole_ref         Mole_MetaData @relation(fields: [mole_id], references: [id])
+
+export const computationalModel = async(userId: string, modelAssessment: string) => {
+    // 50% Model Assessment CNN
+    // 20% Sun Exposure
+    // 5% Family History
+    // 5% Immune Health
+    // 20% Skin Type
     try {
-        // Details here will come from the model.
-        const createdAssessment = await prisma.mole_Assessment.create
-    } catch (error) {
+        const fitzData = await prisma.user_FitzPatrick.findUnique({
+            where: { user_account_foreignkey: userId },
+            select: { immune_health: true, genetics: true, skinType: true }
+        });
+
+        let immuneHealth, genetics = false;
         
+        // Need to compute the risk assessment
+        let riskAssessment = 0;
+
+
+        const nlpResponse = "Call an API to structure the response";
+        
+        const data = {
+            riskAssessment,
+            nlpResponse
+        }
+
+        return data
+    } catch (error) {
+        throw error;
+    }
+}
+
+//create assessment
+export const createAssessment = async(
+    moleId: string, 
+    riskAssessment: number, 
+    nlpResponse: string 
+): Promise<I_Asessment> => {
+    try {
+        // Model assessment
+        // Risk assessment -> Fitzpatrick
+        // Risk Summary -> Contact some NLP
+        const result = await prisma.mole_Assessment.create({
+            data: {
+                risk_assessment: riskAssessment,
+                model_assessment: "Benign",
+                risk_summary: nlpResponse,
+                mole_id: moleId
+            }
+        })
+
+        if (!result) throw new DatabaseError("Failure to fetch data");
+
+        return result;
+    } catch (error) {
+        throw error;
     }
 }
 

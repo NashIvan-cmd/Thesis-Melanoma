@@ -3,6 +3,7 @@ import { View, Text } from 'react-native';
 import React, { useState, useRef, useEffect } from 'react';
 import { API_URL } from '@env';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import { CameraView, CameraType, useCameraPermissions, FlashMode } from 'expo-camera';
 import { Image } from 'expo-image';
@@ -49,8 +50,27 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
             }
             console.log("All image metadata", photo);
             
-            setUri(photo.uri);
-            setImageData(photo.uri);
+            const { width, height } = photo;
+        const size = Math.min(width, height); // Find the smallest side for a square crop
+        const originX = (width - size) / 2;
+        const originY = (height - size) / 2;
+
+        // 🛠️ STEP 2: Crop + Resize to 300x300
+        const manipulatedImage = await ImageManipulator.manipulateAsync(
+            photo.uri,
+            [
+                { crop: { originX, originY, width: size, height: size } }, // Center crop
+                { resize: { width: 300, height: 300 } }                    // Resize to 300x300
+            ],
+            { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+        );
+
+        console.log("Processed image metadata", manipulatedImage);
+
+            // ✅ Set the transformed image URI
+            setUri(manipulatedImage.uri);
+            setImageData(manipulatedImage.uri);
+
             router.navigate("/(app)/(tabs)/(photo)/imageSourceSelect")
         } catch (error) {
             console.error("Error @ take picture", error);

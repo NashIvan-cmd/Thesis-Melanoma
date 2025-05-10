@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import { createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, moleFetchAllByUser } from "../services/mole_metadata.service";
+import { computationalModel, createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, moleFetchAllByUser } from "../services/mole_metadata.service";
 import { bodyOrientationParser } from "../utils/mole_metadata.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { MoleData, signedUrlGenerator } from "../utils/cloudinary";
@@ -15,6 +15,15 @@ interface Imole_metadata {
     moleOwner: string;
     photoUri: string;
     id: string;
+}
+
+export interface I_Asessment {
+    id: string;
+    risk_assessment: number;
+    model_assessment: string;
+    risk_summary: string;
+    createdAt: Date;
+    mole_id: string;
 }
 
 // Processing the image
@@ -38,22 +47,23 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
 
         const parsedBodyOrientation = bodyOrientationParser(bodyOrientation);
         // I am not satisfied with this logic.
-        const thisUserMole = id ? await fetchMole(id) : 
-        await createMoleMetadata(
+        const thisUserMole = id ? await fetchMole(id) : '';
+        let assessment: I_Asessment;
+
+        if (!thisUserMole) {
+            const result = await createMoleMetadata(
             parsedX, 
             parsedY, 
             body_part,
             parsedBodyOrientation,
             photoUri, 
             moleOwner
-        );
-        
-        if (!thisUserMole) {
-            res.status(417).json({
-                success: false,
-                message: 'Expectation Failed'
-            });
-            return;
+            );
+
+            const fitzData = await computationalModel(moleOwner, "Benign");
+            assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
+        } else {
+            
         }
 
         // Do I return the mole back to frontend?

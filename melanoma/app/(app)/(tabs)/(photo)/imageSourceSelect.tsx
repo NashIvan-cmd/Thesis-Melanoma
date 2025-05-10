@@ -2,6 +2,7 @@ import { View, Text, Platform, SafeAreaView } from 'react-native';
 import React from 'react';
 import { router } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
+import * as ImageManipulator from 'expo-image-manipulator';
 
 import BackButton from '@/components/backButton';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
@@ -32,8 +33,15 @@ const ImageSourceSelector = () => {
 
     if (!result.canceled && result.assets && result.assets[0].uri) {
       const uri = result.assets[0].uri;
+
+      const manipulatedImage = await ImageManipulator.manipulateAsync(
+         uri,
+        [{ resize: { width: 300, height: 300 } }],
+         { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+      );
+
       console.log(uri);
-      const convertedUri = await convertToBase64(uri);
+      const convertedUri = await convertToBase64(manipulatedImage.uri);
       setImageData(convertedUri);
     } else {
       console.error('Image picker failed or user cancelled.');
