@@ -10,6 +10,35 @@ export const moleData = async(accessToken: string, userId: string): Promise<obje
             uri,
         } = useImageStore.getState();
 
+        if (!uri) {
+            return;
+        }
+
+        // const response = await fetch(uri);
+        // const blob = await response.blob();
+    
+        // // Create FormData and append the file
+        // const formData = new FormData();
+        // formData.append("file", {
+        // uri: uri,
+        // name: "image.jpg",
+        // type: "image/jpeg"
+        // } as any);
+
+        // const res = await fetch("https://melanoma-api-1.onrender.com/predict", {
+        // method: "POST",
+        // body: formData,
+        // });
+
+        
+        // if (!res.ok) {
+        // throw new Error(`Server responded with status: ${res.status}`);
+        // }
+        
+        // const parsedRes = await res.json();
+
+        // console.log({ parsedRes });
+
         const result = await fetch(`${API_URL}/v1/metadata/mole`, {
             method: "POST",
             headers: {

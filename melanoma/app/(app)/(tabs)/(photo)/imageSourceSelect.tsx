@@ -53,7 +53,7 @@ const ImageSourceSelector = () => {
         if (!accessToken || !userId) {
           throw new Error("Incomplete credentials to make this request");
         }
-        await moleData(accessToken, userId);
+        const result = await moleData(accessToken, userId);
     } catch (error) {
         console.error("Error @ process image request", error);    
     }

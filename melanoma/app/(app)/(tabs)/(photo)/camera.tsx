@@ -20,6 +20,7 @@ import ModalComponent from '@/components/Modal';
 import { router } from 'expo-router';
 import { useSession } from '@/services/authContext';
 import { useImageStore } from '@/services/imageStore';
+import { convertToBase64 } from '@/services/imageManipulation';
 
 interface IRenderCameraProps {
     x_coordinate: number,
@@ -69,7 +70,9 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
 
             // ✅ Set the transformed image URI
             setUri(manipulatedImage.uri);
-            setImageData(manipulatedImage.uri);
+            
+            const base64Image = await convertToBase64(manipulatedImage.uri);
+            setImageData(base64Image);
 
             router.navigate("/(app)/(tabs)/(photo)/imageSourceSelect")
         } catch (error) {

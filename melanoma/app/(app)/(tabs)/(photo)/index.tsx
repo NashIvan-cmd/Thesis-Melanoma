@@ -66,7 +66,7 @@ const Photo = () => {
                 console.log({ result });
                 if(!result) throw new Error("No response from molesToDisplay");
 
-                setMolesArray(result.manipulatedMoles);
+                setMolesArray(result.fetchedAllMoles);
                 } catch (error) {
                 console.error("Error @ run async effect", error);
                 }    

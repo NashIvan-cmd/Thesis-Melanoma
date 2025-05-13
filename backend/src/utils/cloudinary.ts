@@ -18,7 +18,7 @@ export interface MoleData {
 }
 
 cloudinary.config({
-    cloud_name: "ds8siv5vp",
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
     security: true,
     api_key: process.env.CLOUDINARY_API,
     api_secret: process.env.CLOUDINARY_SECRET 

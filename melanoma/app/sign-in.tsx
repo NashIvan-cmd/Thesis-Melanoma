@@ -7,6 +7,7 @@ import { useSession } from '@/services/authContext';
 import { GluestackUIProvider } from '@/components/ui/gluestack-ui-provider';
 import { Input, InputField } from '@/components/ui/input';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
+import { API_URL } from '@env';
 
 export default function SignIn() {
   const [username, setUsername] = useState<string>('');
@@ -17,8 +18,27 @@ export default function SignIn() {
     router.navigate('/sign-up');
   }
 
-  const handleForgotPassword = () => {
+  const handleForgotPassword = async() => {
+    try {
+      // console.log("Forgot request running");
+      // const result = await fetch(`${API_URL}/v1/password/reset`,{ 
+      //   method: "POST",
+      //   headers: {
+      //     'Content-Type': 'application/json'
+      //   },
+      //   body: JSON.stringify({
+      //     username,
+      //     email: username
+      //   })
+      // })
 
+      // const data = await result.json();
+
+      // if (data) router.navigate("/forgetPass");
+      router.navigate("/forgetPass");
+    } catch (error) {
+      console.error("Error @ handle forgot password", error);
+    }
   }
 
   useEffect(() => {

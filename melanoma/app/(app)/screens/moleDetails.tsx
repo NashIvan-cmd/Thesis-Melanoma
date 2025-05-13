@@ -6,18 +6,25 @@ import { useMoleDataStore } from '@/services/moleStore';
 import BackButton from '@/components/backButton';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, InputField } from "@/components/ui/input";
+import { API_URL } from '@env';
+import { useSession } from '@/services/authContext';
 
 const MoleDetails = () => {
+const { userId, accessToken } = useSession();
   const navigation = useNavigation();
   const selectedMole = useMoleDataStore((state) => state.selectedMole);
   const setSelectedMoleToNull = useMoleDataStore((state) => state.setSelectedMoleToNull);
   
   // Keep track of body part editing state
+  const [moleId, setMoleId] = useState('');
   const [bodyPart, setBodyPart] = useState(selectedMole?.body_part || "Identify part");
   const [isEditingBodyPart, setIsEditingBodyPart] = useState(false);
   const [tempBodyPart, setTempBodyPart] = useState("");
 
   useEffect(() => {
+    if (selectedMole) {
+      setMoleId(selectedMole.id);
+    }
     navigation.setOptions({ headerShown: false });
   }, [navigation]);
 
@@ -36,6 +43,7 @@ const MoleDetails = () => {
   };
 
   const handleBodyPartEdit = () => {
+    console.log("I was clicked!");
     if (!isEditingBodyPart) {
       setTempBodyPart(bodyPart);
       setIsEditingBodyPart(true);
@@ -47,6 +55,35 @@ const MoleDetails = () => {
       setIsEditingBodyPart(false);
     }
   };
+
+  const handleBodyPartNameChange = async() => {
+    try {
+      console.log({ moleId });
+
+      if(!moleId) throw new Error("Missing mole id");
+
+      const result = await fetch(`${API_URL}/v1/name/mole`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": accessToken ? `Bearer ${accessToken}` : ''
+        },
+        body: JSON.stringify({
+          moleId,
+          bodyPart: tempBodyPart
+        })
+      });
+
+      const data = await result.json();
+
+      console.log({ data });
+      setBodyPart(data.result.body_part);
+      setIsEditingBodyPart(false);
+      
+    } catch (error) {
+      console.error("Error @ Body part name change", error);
+    }
+  }
 
   const handleCancelEdit = () => {
     setIsEditingBodyPart(false);
@@ -88,7 +125,7 @@ const MoleDetails = () => {
                 </Input>
                 <TouchableOpacity 
                   className="bg-blue-500 rounded-lg p-2 mr-2"
-                  onPress={handleBodyPartEdit}
+                  onPress={handleBodyPartNameChange}
                 >
                   <MaterialIcons name="check" size={20} color="#FFFFFF" />
                 </TouchableOpacity>
