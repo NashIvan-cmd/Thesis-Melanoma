@@ -1,6 +1,6 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import { computationalModel, createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, moleFetchAllByUser } from "../services/mole_metadata.service";
+import { computationalModel, createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, modelApi, moleFetchAllByUser, updateMole } from "../services/mole_metadata.service";
 import { bodyOrientationParser } from "../utils/mole_metadata.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { MoleData, signedUrlGenerator } from "../utils/cloudinary";
@@ -50,6 +50,9 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         const thisUserMole = id ? await fetchMole(id) : '';
         let assessment: I_Asessment;
 
+        // const modelResult = await modelApi(photoUri);
+
+        // console.log({ modelResult });
         if (!thisUserMole) {
             const result = await createMoleMetadata(
             parsedX, 
@@ -60,8 +63,8 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
             moleOwner
             );
 
-            const fitzData = await computationalModel(moleOwner, "Benign");
-            assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
+            // const fitzData = await computationalModel(moleOwner, "Benign");
+            // assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
         } else {
             
         }
@@ -105,10 +108,10 @@ export const getAllLatestMoleController = async(req: Request, res: Response, nex
         }
         const fetchedAllMoles = await getAllMoleByUserId(userId) as MoleData[];
 
-        const manipulatedMoles = await signedUrlGenerator(fetchedAllMoles);
+        // const manipulatedMoles = await (fetchedAllMoles);
 
         res.status(200).json({
-            manipulatedMoles
+            fetchedAllMoles
         })
     } catch (error) {
         next (error);
@@ -134,6 +137,23 @@ export const fetchMoleById = async(req: Request, res: Response, next: NextFuncti
         res.status(200).json({
             moleData
         })
+    } catch (error) {
+        next (error);
+    }
+}
+
+export const updateMoleController = async(req: Request, res: Response, next: NextFunction) => {
+    const { moleId, bodyPart } = req.body
+    console.log(req.body);
+    try {
+        const result = await updateMole(moleId, bodyPart);
+
+        if (!result) {
+            res.status(500).json({ message: "Internal server error" });
+            return
+        }
+
+        res.status(200).json({ result });
     } catch (error) {
         next (error);
     }

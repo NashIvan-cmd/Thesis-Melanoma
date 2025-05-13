@@ -3,6 +3,9 @@ import { DatabaseError, NotFoundError, ValidationError } from "../middlewares/er
 import { cloudinaryUpload } from "../utils/cloudinary";
 import { isBodyPart } from "../utils/mole_metadata.utils";
 import { I_Asessment } from "../controllers/mole_metadata.controller";
+import { FormData } from 'formdata-node';
+import { fileFromPath } from 'formdata-node/file-from-path';
+import { uploadBase64ImageToSupabase } from "../utils/supabase";
 
 const prisma = new PrismaClient();
 
@@ -13,7 +16,7 @@ export const fetchMole = async(mole_Id: string) => {
             where: { id: mole_Id }
         })
 
-        if(!fetchMole) throw new NotFoundError('Id Present. But no mole found');
+        // if(!fetchMole) throw new NotFoundError('Id Present. But no mole found');
 
         return fetchMole;
     } catch (error) {
@@ -32,7 +35,7 @@ export const createMoleMetadata = async(
     try {
         console.log("Mole owner", mole_owner);        
         
-        const cloudData = await cloudinaryUpload(photoUri, mole_owner);
+        const cloudData = await uploadBase64ImageToSupabase(photoUri, mole_owner);
 
         const isOrientationValid = isBodyPart(bodyOrientation);
 
@@ -40,7 +43,7 @@ export const createMoleMetadata = async(
             throw new ValidationError("Invalid value provided");
         }
         
-        console.log("Cloud Url", cloudData.secureUrl);
+        console.log("Cloud Url", cloudData.signedUrl);
         const newMole = await prisma.mole_MetaData.create({
             data: {
                 x_coordinate,
@@ -48,8 +51,8 @@ export const createMoleMetadata = async(
                 body_part: "Test",
                 body_orientation: bodyOrientation as BodyPart,
                 mole_owner,
-                cloudId: cloudData.secureUrl,
-                publicId: cloudData.publicId
+                cloudId: cloudData.signedUrl,
+                publicId: cloudData.publicUrl
             }
         });
         
@@ -70,6 +73,28 @@ export const createMoleMetadata = async(
 //   createdAt        DateTime      @default(now())
 //   mole_id          String
 //   mole_ref         Mole_MetaData @relation(fields: [mole_id], references: [id])
+
+export const modelApi = async(photoUri: string) => {
+    try {
+        console.log("Running this");
+        const imageFile = photoUri;
+        const formData = new FormData();
+        formData.append("file", imageFile);
+
+        console.log(formData);
+
+        fetch("https://melanoma-api-1.onrender.com/predict", {
+        method: "POST",
+        body: formData as any,
+        })
+        .then((res) => res.json())
+        .then((data) => console.log(data))
+        .catch((err) => console.error(err));
+            } catch (error) {
+                console.error("Error @ model API", error);
+                throw error;
+            }
+}
 
 export const computationalModel = async(userId: string, modelAssessment: string) => {
     // 50% Model Assessment CNN
@@ -176,5 +201,27 @@ export const getMoleById = async(moleId: string): Promise<object|null> => {
         return result
     } catch (error) {
         throw error;
+    }
+}
+
+export const updateMole = async(id: string, bodyPart: string) => {
+    try {
+        if (bodyPart == '' ) {
+            throw new ValidationError("Body part cannot be empty");
+        }
+        console.log("Checking body part", bodyPart);
+        
+        const result = await prisma.mole_MetaData.update({
+            where: { id: id },
+            data: { body_part: bodyPart },
+            select: { body_part: true, id: true }
+        })
+        
+        console.log({ result });
+        if (!result) throw new NotFoundError("Item not found");
+
+        return result;
+    } catch (error) {
+        throw error
     }
 }
