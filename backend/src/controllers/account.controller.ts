@@ -138,19 +138,29 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
 }
 
 // Generate a reset token and sen it via email
-// export const requestPasswordReset = async(req: Request, res: Response) => {
-//     const { email } = req.body;
-//     try {
-//         const user = await prisma.user_Account.findUnique(email);
-//         if (!user) return res.status(404).json({ message: 'User does not exist', success: false });
+export const requestPasswordReset = async(req: Request, res: Response, next: NextFunction) => {
+    const { email } = req.body;
+    try {
+        const user = await prisma.user_Account.findFirst({ 
+            where: { 
+                 email
+            }
+        });
 
-//         const secret = process.env.JWT_SECRET + user.password;
-//         const token = jwt.sign({ id: user.id, email: user.email }, secret, { expiresIn: '1h' })
+        console.log("User", user);
+        if (!user) {
+            res.status(404).json({ message: 'User does not exist', success: false });
+            return;
+        } 
 
-//     } catch (error) {
-        
-//     }
-// }
+        const code = generateSimpleVerificationCode();
+        const response = await emailVerificationLogic(email, code);
+
+        res.status(200).json({ code });
+    } catch (error) {
+        next (error);
+    }
+}
 
 export const agreementToTerms = async(req: Request, res: Response, next: NextFunction) => {
     const { boolAns, id } = req.body;
@@ -224,3 +234,31 @@ export const changePasswordController = async(req: Request, res: Response, next:
         next (error);
     }
 }
+
+// @ComputerKing19
+export const resetPasswordController = async(req: Request, res: Response, next: NextFunction) => {
+    console.log(req.body);
+    try {
+        const { email, newPassword } = req.body
+
+        const hashedPassword = hashPassword(newPassword);
+
+        const result = await prisma.user_Account.update({
+            where: { email }, 
+            data: { password: hashedPassword },
+            select: { email: true }
+        });
+
+        if (!result) {
+            res.status(500).json({ message: "Internal server error "});
+        }
+
+        console.log({ result });
+        res.status(200).json({ 
+            result,
+            success: true 
+        });
+    } catch (error) {
+        next (error);
+    }
+} 
