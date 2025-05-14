@@ -41,6 +41,9 @@ interface FitzpatrickState {
   gender: string;
   setGender: (value: string) => void;
 
+  weeklyHoursSun: string,
+  setWeeklyHoursSun: (value: string) => void;
+
 }
 
 export const useFitzpatrickStore = create<FitzpatrickState>((set) => ({
@@ -90,4 +93,6 @@ export const useFitzpatrickStore = create<FitzpatrickState>((set) => ({
   gender: '',
   setGender: (value: string) => set({ gender: value }),
 
+  weeklyHoursSun: '',
+  setWeeklyHoursSun: (value: string) => set({ weeklyHoursSun: value })
 }));

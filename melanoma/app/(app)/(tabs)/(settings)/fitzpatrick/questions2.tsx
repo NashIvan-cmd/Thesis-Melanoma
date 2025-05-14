@@ -22,7 +22,7 @@ const Questions2 = () => {
   const [notComplete, setNotComplete] = useState(true);
 
   const handleNavigate = () => {
-     router.navigate("/fitzpatrick/questions3");
+     router.navigate("/fitzpatrick/questions4");
     }
     
     useEffect(() => {
@@ -98,7 +98,7 @@ const Questions2 = () => {
       </Card>
 
         <ButtonGlue isDisabled={notComplete} onPress={handleNavigate}>
-          <ButtonText>Next</ButtonText>
+          <ButtonText>Next 3/5</ButtonText>
         </ButtonGlue>
     </ScrollView>
   );

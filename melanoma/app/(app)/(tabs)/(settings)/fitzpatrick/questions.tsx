@@ -112,7 +112,7 @@ const Questions = () => {
       </Card>
 
       <ButtonGlue isDisabled={notComplete} onPress={handleNavigate}>
-        <ButtonText>Next</ButtonText>
+        <ButtonText>Next 1/5</ButtonText>
       </ButtonGlue>
       
     </ScrollView>

@@ -23,10 +23,6 @@ const Questions3 = () => {
       setFamilyHistoryMelanoma,
       immuneHealth, 
       setImmuneHealth, 
-      age, 
-      setAge, 
-      gender, 
-      setGender,
     } = useFitzpatrickStore();
     const { userId, accessToken } = useSession();
   
@@ -53,20 +49,14 @@ const Questions3 = () => {
     }
         
     useEffect(() => {
-        if (
-          faceSunExposure != '' && 
-          familyHistoryMelanoma != '' && 
-          immuneHealth != '' && 
-          gender != '' &&
-          age != '' 
-        ) setNotComplete(false);
-    },[faceSunExposure, familyHistoryMelanoma, immuneHealth, gender, age]);
+        if (faceSunExposure != '' && familyHistoryMelanoma != '' && immuneHealth != '' ) setNotComplete(false);
+    },[faceSunExposure, familyHistoryMelanoma, immuneHealth]);
 
   return (
     <ScrollView contentContainerStyle={{ padding: 16 }}>
       <BackButton></BackButton>
-      <Card>
-        <Text style={{ marginBottom: 8, marginTop: 20 }}>
+      <Card className='mt-5 mb-5'>
+        <Text style={{ marginBottom: 8 }}>
           Do you expose your face to the sun? (for the purpose of this quiz we have changed this
           question from the original: Did you expose the area to be treated to the sun?)
         </Text>
@@ -124,28 +114,8 @@ const Questions3 = () => {
           ))}
         </RadioGroup>
       </Card>
-      <Card>
-        <Input>
-          <Text>Age: </Text>
-          <InputField keyboardType='numeric' onChangeText={setAge} value={age} />
-        </Input>
-        <RadioGroup value={gender} onChange={setGender}>
-        <Radio value="male">
-            <RadioIndicator>
-            <RadioIcon as={CircleIcon} />
-            </RadioIndicator>
-            <RadioLabel>Male</RadioLabel>
-        </Radio>
-        <Radio value="female">
-            <RadioIndicator>
-            <RadioIcon as={CircleIcon} />
-            </RadioIndicator>
-            <RadioLabel>Female</RadioLabel>
-        </Radio>
-        </RadioGroup>
-      </Card>
 
-      <View style={{ flexDirection: 'row', gap: 8, marginTop: 16 }}>
+      <View style={{ flexDirection: 'row', gap: 8, marginTop: 5 }}>
         <ButtonGlue isDisabled={notComplete} style={{ flex: 1 }} onPress={calculateSkinType}>
           <ButtonText>Calculate</ButtonText>
         </ButtonGlue>
