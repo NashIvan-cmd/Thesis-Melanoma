@@ -46,6 +46,7 @@ model User_FitzPatrick {
   gender         String
   genetics       String?
   skinType       String
+  averageSunExposure String?
   user_account_foreignkey String @unique
   User_Account   User_Account @relation(fields: [user_account_foreignkey], references: [id])
 }

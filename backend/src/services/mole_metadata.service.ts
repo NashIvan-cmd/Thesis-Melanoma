@@ -35,8 +35,14 @@ export const createMoleMetadata = async(
     try {
         console.log("Mole owner", mole_owner);        
         
-        const cloudData = await uploadBase64ImageToSupabase(photoUri, mole_owner);
+        // Disable supabase for now
+        // const cloudData = await uploadBase64ImageToSupabase(photoUri, mole_owner);
 
+        const cloudData = {
+            signedUrl: 'WashingMachine.ts',
+            publicUrl: 'WashmeNaeNae'
+        }
+        
         const isOrientationValid = isBodyPart(bodyOrientation);
 
         if (!isOrientationValid) {
@@ -94,37 +100,6 @@ export const modelApi = async(photoUri: string) => {
                 console.error("Error @ model API", error);
                 throw error;
             }
-}
-
-export const computationalModel = async(userId: string, modelAssessment: string) => {
-    // 50% Model Assessment CNN
-    // 20% Sun Exposure
-    // 5% Family History
-    // 5% Immune Health
-    // 20% Skin Type
-    try {
-        const fitzData = await prisma.user_FitzPatrick.findUnique({
-            where: { user_account_foreignkey: userId },
-            select: { immune_health: true, genetics: true, skinType: true }
-        });
-
-        let immuneHealth, genetics = false;
-        
-        // Need to compute the risk assessment
-        let riskAssessment = 0;
-
-
-        const nlpResponse = "Call an API to structure the response";
-        
-        const data = {
-            riskAssessment,
-            nlpResponse
-        }
-
-        return data
-    } catch (error) {
-        throw error;
-    }
 }
 
 //create assessment

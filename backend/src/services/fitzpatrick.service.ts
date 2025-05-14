@@ -19,6 +19,7 @@ interface FitzpatrickData {
     age: string;
     gender: string;
     userId: string;
+    weeklyHoursSun: string;
   }
 
   const assessSkinType = (
@@ -31,7 +32,7 @@ interface FitzpatrickData {
     brownAfterSun: number,
     lastSunExposure: number,
     faceReactionToSun: number,
-    faceSunExposure: number
+    faceSunExposure: number,
 ) => {
     const totalPoints = 
         hairColor + 
@@ -111,7 +112,8 @@ export const createFitzPatrick = async(data: FitzpatrickData) => {
                 gender: data.gender,
                 genetics: data.familyHistoryMelanoma,
                 skinType: skinTypeAssessment,
-                user_account_foreignkey: data.userId
+                user_account_foreignkey: data.userId,
+                averageSunExposure: data.weeklyHoursSun
             }
         })
 
@@ -170,7 +172,8 @@ export const updateFitzPatrick = async (data: FitzpatrickData, id: string) => {
                 gender: data.gender,
                 genetics: data.familyHistoryMelanoma,
                 skinType: skinTypeAssessment,
-                user_account_foreignkey: data.userId
+                user_account_foreignkey: data.userId,
+                averageSunExposure: data.weeklyHoursSun
             }
         });
 

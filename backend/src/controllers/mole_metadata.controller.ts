@@ -1,9 +1,10 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import { computationalModel, createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, modelApi, moleFetchAllByUser, updateMole } from "../services/mole_metadata.service";
+import { createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, modelApi, moleFetchAllByUser, updateMole } from "../services/mole_metadata.service";
 import { bodyOrientationParser } from "../utils/mole_metadata.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { MoleData, signedUrlGenerator } from "../utils/cloudinary";
+import { computationalModel } from "../utils/fitzpatrick.utils";
 
 const prisma = new PrismaClient();
 
@@ -15,6 +16,18 @@ interface Imole_metadata {
     moleOwner: string;
     photoUri: string;
     id: string;
+}
+
+interface Imole_metadataReponse {
+    x_coordinate: number;
+    y_coordinate: number;
+    body_part: string;
+    id: string;
+    body_orientation: string;
+    mole_owner: string;
+    cloudId: string;
+    publicId: string;
+    createdAt: Date;
 }
 
 export interface I_Asessment {
@@ -49,30 +62,58 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         // I am not satisfied with this logic.
         const thisUserMole = id ? await fetchMole(id) : '';
         let assessment: I_Asessment;
+        let responseResult: Imole_metadataReponse;
 
         // const modelResult = await modelApi(photoUri);
 
         // console.log({ modelResult });
-        if (!thisUserMole) {
-            const result = await createMoleMetadata(
+        // if (!thisUserMole) {
+        //     const result = await createMoleMetadata(
+        //     parsedX, 
+        //     parsedY, 
+        //     body_part,
+        //     parsedBodyOrientation,
+        //     photoUri, 
+        //     moleOwner
+        //     );
+
+        //     responseResult = result;
+        //     const fitzData = await computationalModel(moleOwner, "Benign");
+        //     assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
+        // } else {
+        //     // Update the picture for that mole and the response
+        //     const date = new Date(Date.now());
+        //     assessment = { 
+        //         id: 'sadasd', 
+        //         risk_assessment: 10, 
+        //         risk_summary: 'Wash', 
+        //         createdAt: date, 
+        //         mole_id: 'asdasd',
+        //         model_assessment: 'sadasdas'
+        //     }
+        // }
+
+        const result = await createMoleMetadata(
             parsedX, 
             parsedY, 
             body_part,
             parsedBodyOrientation,
             photoUri, 
             moleOwner
-            );
+        );
 
-            // const fitzData = await computationalModel(moleOwner, "Benign");
-            // assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
-        } else {
-            
-        }
+        responseResult = result;
+        const fitzData = await computationalModel(moleOwner, "Benign");
+        assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
 
         // Do I return the mole back to frontend?
         // The image needs to be returned
 
-        res.status(201).json({ message: "Successful" });
+        res.status(201).json({ 
+            message: "Successful", 
+            assessment,
+            responseResult 
+        });
 
     } catch (error) {
         next (error);

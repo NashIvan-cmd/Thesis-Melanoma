@@ -17,6 +17,7 @@ export const fitzpatrickData = async(userId: string, accessToken: string) => {
         immuneHealth,
         age,
         gender,
+        weeklyHoursSun
     } = useFitzpatrickStore.getState();
     
     try {
@@ -41,6 +42,7 @@ export const fitzpatrickData = async(userId: string, accessToken: string) => {
                 immuneHealth,
                 age,
                 gender,
+                weeklyHoursSun,
                 userId
             })
         });
