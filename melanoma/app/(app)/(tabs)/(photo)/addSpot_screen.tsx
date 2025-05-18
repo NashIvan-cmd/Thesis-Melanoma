@@ -1,4 +1,4 @@
-import { View, Text, StyleSheet, ScrollView, Dimensions } from 'react-native'
+import { View, Text, StyleSheet, ScrollView, Dimensions, TouchableOpacity } from 'react-native'
 import React, { useState, useRef, useEffect } from 'react'
 import Animated, { useSharedValue, useAnimatedStyle, withSpring, runOnJS } from 'react-native-reanimated';
 import { Gesture, GestureDetector, PanGestureHandler, PanGestureHandlerEventPayload } from 'react-native-gesture-handler';
@@ -18,13 +18,16 @@ import BackButton from '@/components/backButton';
 import RenderCamera from '@/app/(app)/(tabs)/(photo)/camera'
 import ImageSourceSelector from './imageSourceSelect';
 import { useImageStore } from '@/services/imageStore';
-import { molesToDisplay } from '@/api/moleData';
+import { molesToDisplay, molesToDisplayWithOrientation } from '@/api/moleData';
 import { useSession } from '@/services/authContext';
 import { router } from 'expo-router';
 
+import AntDesign from '@expo/vector-icons/AntDesign';
+import { useRecheckMoleStore } from '@/services/useRecheckStore';
+
+
 const { width, height } = Dimensions.get('window');
 
-// I will just changed you
 type TouchPosition = {
   x: number;
   y: number;
@@ -46,11 +49,16 @@ type Normalized = {
   normalizedY: number;
 }
 
-// I need a pointer on the screen. 
-// After that I need to limit the pointer within the body.
+type Mole = {
+  id: string;
+  x_coordinate: number;
+  y_coordinate: number;
+}
+
 const AddSpot_screen = () => {
   const { userId, accessToken } = useSession();
   const { setCoordinates, resetUri } = useImageStore();
+  const { setMoleId, setUserId } = useRecheckMoleStore();
   const ASPECT_RATIO = 620 / 255; // original height / original width
   const RESPONSIVE_WIDTH = width * 0.7; // Using 70% of screen width
   const RESPONSIVE_HEIGHT = RESPONSIVE_WIDTH * ASPECT_RATIO;
@@ -75,14 +83,9 @@ const AddSpot_screen = () => {
     normalizedX: 0,
     normalizedY: 0
   });
-  const [moles, setMoles] = useState<{ id: string, x: number, y: number }[]>([
-    // Example moles data: 
-    { id: 'M1', x: 111, y: 205 },
-    { id: 'M2', x: 134, y: 340 },
-    { id: 'M3', x: 113, y: 89 },
-    { id: 'M4', x: 78, y: 115 },
-    // Add more moles as needed
-  ]);
+  const [moles, setMoles] = useState<Mole[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [currentMole, setCurrentMole] = useState<string | null>(null);
   
   const imageRef = useRef(null);
   const [imagePosition, setImagePosition] = useState({ x: 0, y: 0 });
@@ -115,15 +118,6 @@ const AddSpot_screen = () => {
       savedScale.value = scale.value;
       });
     
-  // Fetch the moles from the backend
-  // useEffect(() => {
-  //   const timeout = setTimeout(() => {
-  //     console.log('Scale value', scale.value);
-  //   }, 3000);
-
-  //   return () => clearTimeout(timeout);
-  // }, [scale.value]);
-  
   /** 📌 Pan Gesture - Moves Image when Zoomed */
   const panGesture = Gesture.Pan()
   .onUpdate((event) => {
@@ -195,8 +189,69 @@ const AddSpot_screen = () => {
     runOnJS(setNormalizedCoordinates)({normalizedX: absoluteX, normalizedY: clampedY});
   }
   
+  const nextMole = (currVal: number) => {
+    if (moles.length === 0) return;
+    
+    const arrLength = moles.length;
+    if (currVal + 1 >= arrLength) {
+      setCurrentIndex(0);
+      setCurrentMole(moles[0].id);
+    } else {
+      setCurrentIndex(currVal + 1);
+      setCurrentMole(moles[currVal + 1].id);
+    }
+  }
+
+  const prevMole = (currVal: number) => {
+    if (moles.length === 0) return;
+    
+    const arrLength = moles.length;
+    if (currVal <= 0) {
+      const lastIndex = Math.max(0, arrLength - 1);
+      setCurrentIndex(lastIndex);
+      setCurrentMole(moles[lastIndex].id);
+    } else {
+      setCurrentIndex(currVal - 1);
+      setCurrentMole(moles[currVal - 1].id);
+    }
+  }
+
+  const handleRecheckRequest = () => {
+    if (currentMole && userId) {
+      // Set the current mole ID and user ID in the Zustand store
+      setMoleId(currentMole);
+      setUserId(userId);
+      
+      // Navigate to the appropriate screen if needed
+      router.navigate("/(app)/(tabs)/(photo)/imageSourceSelect")
+      // Handle the case where there's no selected mole
+    } else {
+      alert("Please select a mole to recheck");
+    }
+  }
+
   useEffect(() => {
-      resetUri();
+    const fetchMoles = async () => {
+      if (userId && accessToken && bodyPosition) {
+        const result = await molesToDisplayWithOrientation(userId, accessToken, bodyPosition);
+        
+        // Handle the nested structure of the response
+        if (result && result.fetchedAllMoles && result.fetchedAllMoles.length > 0) {
+          setMoles(result.fetchedAllMoles);
+          // Set the initial currentMole only after moles are loaded
+          setCurrentMole(result.fetchedAllMoles[0].id);
+        } else {
+          setMoles([]);
+          setCurrentMole(null);
+        }
+      }
+    };
+
+    fetchMoles();
+  }, [userId, accessToken, bodyPosition]);
+
+  useEffect(() => {
+    resetUri();
     const timeout = setTimeout(() => {
       const parsedX = Math.floor(normalizedCoordinates.normalizedX);
       const parsedY = Math.floor(normalizedCoordinates.normalizedY);
@@ -204,20 +259,14 @@ const AddSpot_screen = () => {
     }, 3000)  
 
     return () => clearTimeout(timeout);
+  }, [normalizedCoordinates.normalizedX, normalizedCoordinates.normalizedY]);
 
-  },[normalizedCoordinates.normalizedX, normalizedCoordinates.normalizedY]);
-
-  // console.log({ touchPosition });
-  console.log({ coordinates });
-  console.log({ imagePosition });
-  console.log('image ref', imageRef);
-  
   const toggleBodyPostion = (): void => {
-  if (bodyPosition === 'Front Body') {
+    if (bodyPosition === 'Front Body') {
       setBodyPosition('Back Body');
-  } else {
+    } else {
       setBodyPosition('Front Body');
-  }
+    }
   }
 
   const handleAddSpotRequest = () => {
@@ -226,93 +275,134 @@ const AddSpot_screen = () => {
 
   return (
     <>
-        <View className='flex-1 p-2 pr-5 pl-5 items-center'>
-          <BackButton></BackButton>
-          <Text>0 spots</Text>
-          <View style={styles.coordinatesDisplay}>
-            <Text style={styles.coordinatesText}>Relative: x={coordinates.x.toFixed(0)}, y={coordinates.y.toFixed(0)}</Text>
-            <Text style={styles.coordinatesText}>Absolute: x={coordinates.absoluteX.toFixed(0)}, y={coordinates.absoluteY.toFixed(0)}</Text>
-            <Text 
-              style={styles.coordinatesText}>
-              Normalized: x={normalizedCoordinates.normalizedX.toFixed(0)}, 
-              y={normalizedCoordinates.normalizedY.toFixed(0)}
-            </Text>
+      <View className='flex-1 p-2 pr-5 pl-5 items-center'>
+        <BackButton></BackButton>
+        <Text>{moles.length} spots</Text>
+        <View className="absolute left-5 top-12 z-50 items-start space-y-3">
+          {/* Recheck button */}
+          <ButtonGlue onPress={handleRecheckRequest} disabled={!currentMole}>
+            <ButtonText>Recheck</ButtonText>
+          </ButtonGlue>
+
+          {/* Navigation Arrows */}
+          <View className="flex-row space-x-3">
+            {/* Prev Button */}
+            <TouchableOpacity
+              onPress={() => prevMole(currentIndex)}
+              disabled={moles.length === 1 || currentIndex === 0}
+              activeOpacity={0.6}
+            >
+              <AntDesign
+                name={moles.length === 0 || currentIndex === 0 ? 'leftsquareo' : 'leftsquare'}
+                size={28}
+                color={moles.length === 0 || currentIndex === 0 ? '#aaa' : 'black'}
+              />
+            </TouchableOpacity>
+
+            {/* Next Button */}
+            <TouchableOpacity
+              onPress={() => nextMole(currentIndex)}
+              disabled={moles.length === 0 || currentIndex >= moles.length - 1}
+              activeOpacity={0.6}
+            >
+              <AntDesign
+                name={moles.length === 0 || currentIndex >= moles.length - 1 ? 'rightsquareo' : 'rightsquare'}
+                size={28}
+                color={moles.length === 0 || currentIndex >= moles.length - 1 ? '#aaa' : 'black'}
+              />
+            </TouchableOpacity>
           </View>
+        </View>
+        <View style={styles.coordinatesDisplay}>
+          <Text style={styles.coordinatesText}>Relative: x={coordinates.x.toFixed(0)}, y={coordinates.y.toFixed(0)}</Text>
+          <Text style={styles.coordinatesText}>Absolute: x={coordinates.absoluteX.toFixed(0)}, y={coordinates.absoluteY.toFixed(0)}</Text>
+          <Text 
+            style={styles.coordinatesText}>
+            Normalized: x={normalizedCoordinates.normalizedX.toFixed(0)}, 
+            y={normalizedCoordinates.normalizedY.toFixed(0)}
+          </Text>
+        </View>
         <Animated.View style={animatedStyle} className='flex-1 w-100 bg-fff items-center'>
           <View className='items-center'>
             <PanGestureHandler onGestureEvent={onPanGestureV2}>
-              <View >
-              <GestureDetector gesture={Gesture.Simultaneous(pinchGesture, panGesture)}>
-                <Image 
+              <View>
+                <GestureDetector gesture={Gesture.Simultaneous(pinchGesture, panGesture)}>
+                  <Image 
                     ref={imageRef}
                     source={
-                        bodyPosition === "Front Body" ? 
-                        FrontBody2 : BackBody2
+                      bodyPosition === "Front Body" ? 
+                      FrontBody2 : BackBody2
                     }
                     onLayout={(event) => {
                       const { width, height } = event.nativeEvent.layout;
                       setImageSize({ width, height });
                     }}
                     style={[
-                        { width: 225, height: 545 }
-                    ]}/>
-            </GestureDetector>
-            {moles.map((mole) => {
-              
-              return(
-                <View 
-                  key={mole.id} // Ensure each marker has a unique key
-                  style={[
+                      { width: 225, height: 545 }
+                    ]}
+                  />
+                </GestureDetector>
+                
+                {/* Render moles only if array has items */}
+                {moles.length > 0 && moles.map((mole) => (
+                  <View 
+                    key={mole.id}
+                    style={[
+                      styles.indicator,
+                      { 
+                        left: mole.x_coordinate - 12, 
+                        top: mole.y_coordinate,
+                        transform: [
+                          { translateX: -10 }
+                        ]
+                      }
+                    ]}
+                  >
+                    <Text style={{ 
+                      fontSize: 20, 
+                      color: currentMole === mole.id ? 'red' : 'black' 
+                    }}>.</Text>
+                  </View>
+                ))}
+                
+                <View style={[
                   styles.indicator,
                   { 
-                    left: mole.x - 12, 
-                    top: mole.y,
+                    left: `${coordinates.percentX}%`, 
+                    top: `${coordinates.percentY}%`,
                     transform: [
-                      { translateX: -10 }
+                      { translateX: -5 },
+                      { translateY: -5 }
                     ]
                   }
                 ]}>
-                    <Text style={{ fontSize: 20, color: 'red' }}>.</Text> {/* Simple "M" marker */}
+                  <Entypo name="pin" size={24} color="red" />
                 </View>
-              )
-            })}
-            <View style={[
-                styles.indicator,
-                { 
-                  left: `${coordinates.percentX}%`, 
-                  top: `${coordinates.percentY}%`,
-                  transform: [
-                    { translateX: -5 },  // Half the width of your indicator
-                    { translateY: -5 }   // Half the height of your indicator
-                  ]
-                }
-              ]}>
-                <Entypo name="pin" size={24} color="red" />
-              </View>
               </View>
             </PanGestureHandler>
-            </View>
-          </Animated.View>
-          <View className='mb-1 items-center'>
-            <ButtonGlue className="bg-teal-600 rounded-lg" onPress={toggleBodyPostion}>
-              <ButtonText>{bodyPosition}</ButtonText>
-            </ButtonGlue>
           </View>
-          <View className='w-full mt-auto mb-1 rounder-lg'>
-            <ButtonGlue className="bg-blue-600 rounded-lg" onPress={handleAddSpotRequest}>
-              <ButtonText>
-                Add Spot
-              </ButtonText>
-            </ButtonGlue>
-          </View>
-          <View className="w-full bg-slate-400 mt-auto items-center rounded-lg p-[4] border border-slate-300">
-            <Text className="text-slate-700">Drag the pin to indicate mole spot</Text>
-            <Text className="text-slate-700">
-              <MaterialCommunityIcons name="gesture-pinch" size={24} color="#334155" />
-              Pinch to zoom
-            </Text>
-          </View>
+        </Animated.View>
+        <View className='mb-1 items-center'>
+          <ButtonGlue className="bg-teal-600 rounded-lg" onPress={toggleBodyPostion}>
+            <ButtonText>{bodyPosition}</ButtonText>
+          </ButtonGlue>
         </View>
+        <View className='w-full mt-auto mb-1 rounder-lg'>
+          <ButtonGlue className="bg-blue-600 rounded-lg" onPress={handleAddSpotRequest}>
+            <ButtonText>
+              Add Spot
+            </ButtonText>
+          </ButtonGlue>
+        </View>
+        <View className="w-full bg-slate-400 mt-auto items-center rounded-lg p-[4] border border-slate-300">
+          <Text className='text-slate-700'>Red MOLE indicates selected</Text>
+          <Text className="text-slate-700">Drag the pin to indicate mole spot</Text>
+          <Text className="text-slate-700">
+            <MaterialCommunityIcons name="gesture-pinch" size={24} color="#334155" />
+            Pinch to zoom
+          </Text>
+        </View>
+      </View>
     </>
   )
 }

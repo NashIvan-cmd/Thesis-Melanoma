@@ -58,3 +58,17 @@ export const uploadBase64ImageToSupabase = async (
     throw err;
   }
 };
+
+
+export const deleteImageFromSupabase = async (cloudId: string) => {
+  const { data, error } = await supabase.storage
+    .from('melanoma-thesis')
+    .remove([cloudId]);
+
+  if (error) {
+    console.error('Error removing file:', error);
+    throw error;
+  }
+
+  return data;
+};

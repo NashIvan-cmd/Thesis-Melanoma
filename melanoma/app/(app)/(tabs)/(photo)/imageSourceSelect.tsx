@@ -1,8 +1,9 @@
-import { View, Text, Platform, SafeAreaView } from 'react-native';
-import React from 'react';
-import { router } from 'expo-router';
+import { View, Text, Platform, SafeAreaView, TouchableOpacity } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { router, useNavigation } from 'expo-router';
 import * as ImagePicker from 'expo-image-picker';
 import * as ImageManipulator from 'expo-image-manipulator';
+import { useFocusEffect } from '@react-navigation/native';
 
 import BackButton from '@/components/backButton';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
@@ -13,13 +14,85 @@ import { convertToBase64 } from '@/services/imageManipulation';
 import { useSession } from '@/services/authContext';
 import { moleData } from '@/api/moleData';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useAssessmentStore } from '@/services/useAssessmentStore';
+import { Progress, ProgressFilledTrack } from "@/components/ui/progress";
+import { useRecheckMoleStore } from '@/services/useRecheckStore';
+
+import { I_Assessment } from '@/api/moleData';
 
 const ImageSourceSelector = () => {
   const { accessToken, userId } = useSession();
   const { setImageData } = useImageStore();
   const { uri } = useImageStore.getState();
+  const { setAssessmentData } = useAssessmentStore();
+  const { resetRecheck } = useRecheckMoleStore();
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [progress, setProgress] = useState(0);
+  const [error, setError] = useState({ visible: false, message: "" });
+  const [shouldResetOnBlur, setShouldResetOnBlur] = useState(true);
+  const navigation = useNavigation();
+  
+  // Use a ref to track the current state instead of relying on the state variable directly
+  const shouldResetRef = useRef(true);
+
+  // Update the ref whenever the state changes
+  useEffect(() => {
+    shouldResetRef.current = shouldResetOnBlur;
+  }, [shouldResetOnBlur]);
+
+  // Handle screen focus and blur
+  useFocusEffect(
+    React.useCallback(() => {
+      console.log("Screen focused");
+      
+      // Cleanup function that runs when screen loses focus
+      return () => {
+        console.log("Screen lost focus");
+        if (shouldResetRef.current) {
+          console.log("Resetting recheck state");
+          resetRecheck();
+        } else {
+          console.log("Skip resetting recheck state");
+          // Reset the flag for next time - update both state and ref
+          setShouldResetOnBlur(true);
+          shouldResetRef.current = true;
+        }
+      };
+    }, [resetRecheck])
+  );
+
+  // Progress bar animation
+  React.useEffect(() => {
+    let progressInterval: any;
+    
+    // When analysis starts, animate the progress bar
+    if (isAnalyzing) {
+      setProgress(0);
+      progressInterval = setInterval(() => {
+        setProgress(prevProgress => {
+          // Cap at 90% during analysis to indicate it's still working
+          // We'll jump to 100% once the analysis is complete
+          if (prevProgress < 90) {
+            return prevProgress + 5;
+          }
+          return prevProgress;
+        });
+      }, 300);
+    } else if (progress > 0) {
+      // When analysis completes, finish the progress bar
+      setProgress(100);
+    }
+
+    return () => {
+      if (progressInterval) clearInterval(progressInterval);
+    };
+  }, [isAnalyzing]);
 
   const takePicture = () => {
+    // Prevent reset when navigating to camera - update both state and ref
+    console.log('Look it should not reset');
+    setShouldResetOnBlur(false);
+    shouldResetRef.current = false; // Immediately update the ref
     router.navigate('/(app)/(tabs)/(photo)/camera');
   };
 
@@ -50,12 +123,58 @@ const ImageSourceSelector = () => {
 
   const processImageRequest = async() => {
     try {
+        // Clear any previous errors
+        setError({ visible: false, message: "" });
+        
         if (!accessToken || !userId) {
           throw new Error("Incomplete credentials to make this request");
         }
-        const result = await moleData(accessToken, userId);
+
+        // Show progress bar while processing
+        setIsAnalyzing(true);
+
+        const parsedResult: I_Assessment | undefined = await moleData(accessToken, userId);
+
+        if (!parsedResult) throw new Error("Result is missing!");
+        
+        console.log("Cloud Id", parsedResult.moleData.cloudId);
+        setAssessmentData(
+            parsedResult.moleData.cloudId,
+            parsedResult.moleData.x_coordinate,
+            parsedResult.moleData.y_coordinate,
+            parsedResult.assessment.model_assessment,
+            parsedResult.assessment.risk_assessment,
+            parsedResult.assessment.risk_summary,
+            parsedResult.moleData.body_part,
+            parsedResult.assessment.createdAt
+        );
+
+        // Hide progress bar
+        setIsAnalyzing(false);
+        
+        // Navigate to assessment screen
+        router.navigate("/assessment");
     } catch (error) {
-        console.error("Error @ process image request", error);    
+        console.error("Error @ process image request", error);
+        setIsAnalyzing(false);
+        
+        // Set error message for UI
+        let errorMessage = "Unable to analyze image. Please try again.";
+        
+        if (error instanceof Error) {
+          if (error.message.includes("credentials")) {
+            errorMessage = "Session expired. Please log in again.";
+          } else if (error.message.includes("network") || error.message.includes("timeout")) {
+            errorMessage = "Network error. Please check your connection and try again.";
+          } else if (error.message.includes("Result is missing")) {
+            errorMessage = "Server returned invalid data. Please try again later.";
+          }
+        }
+        
+        setError({
+          visible: true,
+          message: errorMessage
+        });
     }
   }
 
@@ -70,6 +189,24 @@ const ImageSourceSelector = () => {
       >
         <View className="p-4">
           <BackButton />
+          
+          {/* Error message */}
+          {error.visible && (
+            <View className="mt-2 mb-4 p-4 bg-red-50 border border-red-200 rounded-lg flex-row items-center">
+              <View className="h-5 w-5 rounded-full bg-red-500 items-center justify-center">
+                <Text className="text-white text-xs font-bold">!</Text>
+              </View>
+              <View className="flex-1 ml-2">
+                <Text className="text-red-800 font-medium">{error.message}</Text>
+              </View>
+              <TouchableOpacity 
+                onPress={() => setError({ visible: false, message: "" })}
+                hitSlop={{ top: 10, right: 10, bottom: 10, left: 10 }}
+              >
+                <Text className="text-red-600 font-bold text-lg">×</Text>
+              </TouchableOpacity>
+            </View>
+          )}
           
           <View
             style={{
@@ -134,13 +271,43 @@ const ImageSourceSelector = () => {
         </View>
       </KeyboardAwareScrollView>
       
+      {/* Progress Overlay */}
+      {isAnalyzing && (
+        <View className="absolute top-0 left-0 right-0 bottom-0 bg-black/50 justify-center items-center">
+          <View className="bg-white p-6 rounded-xl w-4/5 items-center">
+            <Text className="text-lg font-medium mb-4 text-slate-800">Analyzing Image...</Text>
+            <View className="w-full mb-3">
+              <Progress value={progress} size="md" className="w-full">
+                <ProgressFilledTrack className="bg-blue-600" />
+              </Progress>
+            </View>
+            <Text className="text-sm text-slate-500">
+              Please wait while our AI analyzes your image
+            </Text>
+          </View>
+        </View>
+      )}
+      
+      {/* Error Retry Button (appears when there's an error and analysis is not in progress) */}
+      {error.visible && !isAnalyzing && (
+        <View className="absolute bottom-20 left-0 right-0 px-4">
+          <ButtonGlue 
+            onPress={() => setError({ visible: false, message: "" })}
+            className="bg-red-600 h-12 py-3 rounded-xl shadow-md w-full mb-2">
+            <ButtonText className="text-base font-medium">Dismiss Error</ButtonText>
+          </ButtonGlue>
+        </View>
+      )}
+      
       {/* Fixed Action Button at bottom */}
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
         <ButtonGlue 
           onPress={processImageRequest} 
-          isDisabled={!uri}
-          className={`${uri ? 'bg-blue-700' : 'bg-blue-400'} h-14 py-4 rounded-xl shadow-md w-full`}>
-            <ButtonText className="text-lg font-medium">Analyze Image</ButtonText>
+          isDisabled={!uri || isAnalyzing}
+          className={`${!uri || isAnalyzing ? 'bg-blue-400' : error.visible ? 'bg-blue-700' : 'bg-blue-700'} h-14 py-4 rounded-xl shadow-md w-full`}>
+            <ButtonText className="text-lg font-medium">
+              {isAnalyzing ? 'Analyzing...' : error.visible ? 'Retry Analysis' : 'Analyze Image'}
+            </ButtonText>
         </ButtonGlue>
       </View>
     </SafeAreaView>

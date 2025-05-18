@@ -1,6 +1,8 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { hashPassword } from "../utils/account.utils";
 import { ValidationError } from "../middlewares/error.middleware";
+import { deleteAssessmentByMoleRef, deleteMoleById } from "./mole_metadata.service";
+import { deleteImageFromSupabase } from "../utils/supabase";
 
 const prisma = new PrismaClient();
 
@@ -79,6 +81,28 @@ export const changePassword = async(id: string, newPassword: string) => {
         })
 
         return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteAccountService = async(molesArr: any) => {
+    try {
+        
+        const result = await Promise.all(
+            molesArr.map(async(mole: any) => {
+                await deleteAssessmentByMoleRef(mole.id);
+                await deleteImageFromSupabase(mole.cloudId);
+            })       
+        )
+
+        await Promise.all(
+            molesArr.map(async(mole: any) => {
+                await deleteMoleById(mole.id);
+            })
+        )
+
+        return;
     } catch (error) {
         throw error;
     }

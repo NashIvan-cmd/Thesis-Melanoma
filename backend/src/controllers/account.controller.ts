@@ -1,13 +1,14 @@
 import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 // import jwt from "jsonwebtoken";
-import { checkUserAgreement, findUser, findUserPassword, changePassword } from "../services/account.service";
+import { checkUserAgreement, findUser, findUserPassword, changePassword, deleteAccountService } from "../services/account.service";
 import { emailVerificationLogic, generateSimpleVerificationCode, hashPassword } from "../utils/account.utils";
 import { accessTokenGenerator, refreshTokenGenerator } from "../middlewares/auth.middleware";
 
 import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { NotFoundError, ValidationError } from "../middlewares/error.middleware";
+import { getAllMoleByUserId } from "../services/mole_metadata.service";
 
 const prisma = new PrismaClient();
 
@@ -20,6 +21,10 @@ interface create_account {
     username: string;
     email: string;
     password: string;
+}
+
+interface I_Metadata {
+    id: string
 }
 
 // req: Request ensures that we have property of req.body, params and etc.
@@ -262,3 +267,15 @@ export const resetPasswordController = async(req: Request, res: Response, next: 
         next (error);
     }
 } 
+
+
+export const deleteAccountController = async(req: Request, res: Response, next: NextFunction) => {
+    const { accountId } = req.body
+    try {
+        const allMoles: any = await getAllMoleByUserId(accountId);
+        
+        await deleteAccountService(allMoles);
+    } catch (error) {
+        next (error);
+    }
+}

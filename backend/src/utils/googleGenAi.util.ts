@@ -15,7 +15,7 @@ export async function googleGenAi(skinType: string, sunExposure: string, immuneH
   });
   const config = {
     responseMimeType: 'text/plain',
-    maxOutputTokens: 500,
+    maxOutputTokens: 10,
   };
   const model = 'gemini-2.0-flash-lite';
   const contents = [

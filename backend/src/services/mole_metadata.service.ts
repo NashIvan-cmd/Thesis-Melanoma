@@ -112,12 +112,15 @@ export const createAssessment = async(
         // Model assessment
         // Risk assessment -> Fitzpatrick
         // Risk Summary -> Contact some NLP
+        console.log(`Mole id: ${moleId}, RA: ${riskAssessment}, nlp: ${nlpResponse}`);
         const result = await prisma.mole_Assessment.create({
             data: {
                 risk_assessment: riskAssessment,
                 model_assessment: "Benign",
                 risk_summary: nlpResponse,
-                mole_id: moleId
+                mole_ref: {
+                    connect: { id: moleId }, // ✅ connect relation manually
+                }
             }
         })
 
@@ -153,6 +156,8 @@ export const getCloudinaryImageById = (moleId: string[]) => {
     }
 }
 
+// Fetch all of the moles of a user
+// Regardless of orientation
 export const getAllMoleByUserId = async(userId: string): Promise<object[]> => {
     try {
         const result = await prisma.mole_MetaData.findMany({
@@ -166,7 +171,23 @@ export const getAllMoleByUserId = async(userId: string): Promise<object[]> => {
     }
 }
 
+export const getAllMoleByUserIdWithOrientation = async(userId: string, orientation: BodyPart): Promise<object[]> => {
+    try {
+        const result = await prisma.mole_MetaData.findMany({
+            where: { mole_owner: userId, body_orientation: orientation },
+            orderBy: { createdAt: 'desc' },
+            select: { id: true, x_coordinate: true, y_coordinate: true }
+        })
 
+        console.log("Result retrieved", result);
+
+        return result
+    } catch (error) {
+        throw error;
+    }
+}
+
+// Single Mole
 export const getMoleById = async(moleId: string): Promise<object|null> => {
     try {
         const result = await prisma.mole_MetaData.findUnique({
@@ -198,5 +219,95 @@ export const updateMole = async(id: string, bodyPart: string) => {
         return result;
     } catch (error) {
         throw error
+    }
+}
+
+export const getAssessmentById = async(moleId: string) => {
+    try {
+        const result = await prisma.mole_Assessment.findFirst({
+            where: { mole_id: moleId },
+            select: { id: true }
+        })
+
+        if (!result) return;
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteAssessmentByMoleRef = async(moleId: string) => {
+    try {
+        await prisma.mole_Assessment.deleteMany({
+            where: { mole_id: moleId}
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const deleteMoleById = async (moleId: string) => {
+    try {
+        const deletedRow = await prisma.mole_MetaData.delete({
+            where: { id: moleId }
+        });
+
+        console.log({ deletedRow });
+
+        return;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const recheckMole = async(moleId: string, photoUri: string) => {
+    try {
+        if (!moleId) throw new ValidationError("Mole is missing");
+
+        const result = await prisma.mole_MetaData.update({
+            where: { id: moleId },
+            data: { cloudId: photoUri }
+        })
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const updateAssessment = async(id: string, nlpResponse: string, riskAssessment: number) => {
+    try {
+        if (!id) throw new ValidationError("Mole id is missing");
+
+        const result = await prisma.mole_Assessment.update({
+            where: { id: id },
+            data: { 
+                risk_assessment: riskAssessment,
+                risk_summary: nlpResponse,
+                model_assessment: "Benign"
+            }
+        })
+
+        return result;
+    } catch (error) {
+        throw error;
+    }
+}
+
+export const findMoleAssessment = async(moleId: string) => {
+    try {
+        if (!moleId) throw new ValidationError("Mole id is missing");
+
+         const result = await prisma.mole_Assessment.findFirst({
+            where: { mole_id: moleId },
+            select: { id: true }
+         })
+
+         if (!result) throw new NotFoundError('No assessment found');
+         
+         return result.id;
+    } catch (error) {
+        throw error;
     }
 }

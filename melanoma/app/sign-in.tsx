@@ -14,32 +14,27 @@ export default function SignIn() {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  const { signIn, session, accessToken, isLoading } = useSession();
+
   const handleSignUpRequest = () => {
     router.navigate('/sign-up');
-  }
+  };
 
-  const handleForgotPassword = async() => {
+  const handleForgotPassword = async () => {
     try {
-      // console.log("Forgot request running");
-      // const result = await fetch(`${API_URL}/v1/password/reset`,{ 
-      //   method: "POST",
-      //   headers: {
-      //     'Content-Type': 'application/json'
-      //   },
-      //   body: JSON.stringify({
-      //     username,
-      //     email: username
-      //   })
-      // })
-
-      // const data = await result.json();
-
-      // if (data) router.navigate("/forgetPass");
       router.navigate("/forgetPass");
     } catch (error) {
       console.error("Error @ handle forgot password", error);
     }
-  }
+  };
+
+  // Auto redirect if session exists
+  useEffect(() => {
+    if (!isLoading && session && accessToken) {
+      console.log("Valid session found. Redirecting...");
+      router.replace('/');
+    }
+  }, [isLoading, session, accessToken]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {
@@ -48,9 +43,7 @@ export default function SignIn() {
 
     return () => clearTimeout(timeoutId);
   }, [username, password]);
-  
-  const { signIn } = useSession();
-  
+
   return (
     <GluestackUIProvider>
       <View className="flex-1 justify-center items-center bg-gray-50 px-4">
@@ -58,7 +51,7 @@ export default function SignIn() {
           <Text className="text-2xl font-bold text-center mb-6 text-gray-800">
             Melanoma App
           </Text>
-          
+
           <View className="space-y-4">
             <Input
               size="md"
@@ -75,7 +68,7 @@ export default function SignIn() {
                 className="p-2"
               />
             </Input>
-            
+
             <Input
               size="md"
               className="mb-4 rounded-lg border border-gray-200"
@@ -91,20 +84,20 @@ export default function SignIn() {
                 className="p-2"
               />
             </Input>
-            
+
             {error ? (
               <Text className="text-red-500 text-center mb-2">
                 {error}
               </Text>
             ) : null}
-            
+
             <ButtonGlue
               size="lg"
               className="rounded-lg py-4 h-14 bg-blue-500 w-full"
-              onPress={async() => {
+              onPress={async () => {
                 try {
                   const boolRes = await signIn(username, password);
-                  
+
                   console.log("Boolean Result", boolRes);
                   if (boolRes) {
                     console.log("replacing the route");
@@ -128,7 +121,7 @@ export default function SignIn() {
               <Text className="text-blue-500 font-semibold">Forgot Password?</Text>
             </TouchableOpacity>
           </View>
-          
+
           <View className="flex-row justify-center items-center mt-2 space-x-1">
             <Text className="text-gray-600">No account yet?</Text>
             <TouchableOpacity onPress={handleSignUpRequest}>

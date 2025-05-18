@@ -11,6 +11,7 @@ import { Image } from 'expo-image';
 import { Pressable } from '@/components/ui/pressable';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
 
+import BackButton from '@/components/backButton';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
 import Entypo from '@expo/vector-icons/Entypo';
@@ -164,9 +165,7 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
                         >
                         {/* Safe space for back button with padding */}
                         <View className="pt-12 pl-4">
-                            <Pressable onPress={handleGoBack}>
-                            <Entypo name="chevron-left" size={44} color="white" />
-                            </Pressable>
+                            <BackButton></BackButton>
                         </View>
                         
                         {/* Center targeting circle */}

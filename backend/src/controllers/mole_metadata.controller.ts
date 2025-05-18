@@ -1,6 +1,6 @@
-import { Prisma, PrismaClient } from "@prisma/client";
+import { BodyPart, Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
-import { createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getMoleById, modelApi, moleFetchAllByUser, updateMole } from "../services/mole_metadata.service";
+import { createAssessment, createMoleMetadata, fetchMole, getAllMoleByUserId, getAllMoleByUserIdWithOrientation, getMoleById, modelApi, moleFetchAllByUser, recheckMole, updateMole, findMoleAssessment, updateAssessment } from "../services/mole_metadata.service";
 import { bodyOrientationParser } from "../utils/mole_metadata.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { MoleData, signedUrlGenerator } from "../utils/cloudinary";
@@ -104,7 +104,7 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
 
         responseResult = result;
         const fitzData = await computationalModel(moleOwner, "Benign");
-        assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
+        assessment = await createAssessment(result.id, fitzData.riskAssessment, fitzData.nlpResponse);
 
         // Do I return the mole back to frontend?
         // The image needs to be returned
@@ -112,7 +112,7 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         res.status(201).json({ 
             message: "Successful", 
             assessment,
-            responseResult 
+            moleData: responseResult 
         });
 
     } catch (error) {
@@ -139,6 +139,7 @@ export const moleFetchAllController = async(req: Request, res: Response, next: N
 }
 
 // This needs to be POST method
+// Regardless of orientation
 export const getAllLatestMoleController = async(req: Request, res: Response, next: NextFunction) => {
     const { userId } = req.body;
     console.log({ userId });
@@ -149,6 +150,30 @@ export const getAllLatestMoleController = async(req: Request, res: Response, nex
         }
         const fetchedAllMoles = await getAllMoleByUserId(userId) as MoleData[];
 
+        // const manipulatedMoles = await (fetchedAllMoles);
+
+        res.status(200).json({
+            fetchedAllMoles
+        })
+    } catch (error) {
+        next (error);
+    }
+}
+
+// Must have orientation
+export const getAllMolesWithOrientationController = async(req: Request, res: Response, next: NextFunction) => {
+    const { userId, orientation } = req.body;
+    console.log(`Fetch mole with orientation ${userId} and ${orientation}`);
+    try {
+        
+        if (!userId) {
+            throw new ValidationError("Missing user id");
+        }
+
+        const parsedOrientation = bodyOrientationParser(orientation);
+        const fetchedAllMoles = await getAllMoleByUserIdWithOrientation(userId, parsedOrientation as BodyPart) as MoleData[];
+
+        // No longer needed since we store URL on database
         // const manipulatedMoles = await (fetchedAllMoles);
 
         res.status(200).json({
@@ -183,6 +208,8 @@ export const fetchMoleById = async(req: Request, res: Response, next: NextFuncti
     }
 }
 
+
+// This one is for changing the name
 export const updateMoleController = async(req: Request, res: Response, next: NextFunction) => {
     const { moleId, bodyPart } = req.body
     console.log(req.body);
@@ -195,6 +222,26 @@ export const updateMoleController = async(req: Request, res: Response, next: Nex
         }
 
         res.status(200).json({ result });
+    } catch (error) {
+        next (error);
+    }
+}
+
+export const recheckMoleController = async(req: Request, res: Response, next: NextFunction) => {
+        const { moleId, photoUri, userId } = req.body
+        console.log('MoleId', moleId);
+    try {
+        const moleData = await recheckMole(moleId, photoUri);
+
+        const moleAssessment = await findMoleAssessment(moleId);
+        const fitzData = await computationalModel(userId, "Benign");
+        const assessmentResult = await updateAssessment(moleAssessment,  fitzData.nlpResponse, fitzData.riskAssessment);
+
+        res.status(200).json({ 
+            message: "Successful", 
+            assessment: assessmentResult,
+            moleData: moleData 
+        });
     } catch (error) {
         next (error);
     }

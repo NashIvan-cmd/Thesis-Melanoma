@@ -11,13 +11,13 @@ interface fitzDictionary<T> {
 export const familyHistoryDictionary: fitzDictionary<number> = {
     "Yes, immediate family (parent, sibling)" : 100,
     "Yes, extended family (aunt, uncle, grandparent)" : 50,
-    "No, I do not have a weakened immune system": 0
+    "No family history of melanoma": 30
 } 
 
 export const immuneSystemDictionary: fitzDictionary<number> = {
     "Yes, due to an autoimmune disease": 100,
     "Yes, due to immunosuppressive treatment (e.g., chemotherapy, steroids)": 50,
-    "No, I do not have a weakened immune system": 0
+    "No, I do not have a weakened immune system": 30
 }
 
 export const skinTypeDictionary: fitzDictionary<number> = {
@@ -65,24 +65,48 @@ export const computationalModel = async(userId: string, modelAssessment: string)
 
         if (fitzData.averageSunExposure == undefined) throw new ValidationError("Sun exposure undefined")
 
+        // console.log("🔍 Debugging Dictionary Lookup Values:");
+        // console.log("fitzData.skinType:", fitzData.skinType);
+        // console.log("skinTypeValue:", skinTypeDictionary[fitzData.skinType]);
+
+        // console.log("fitzData.immune_health:", fitzData.immune_health);
+        // console.log("geneticsValue:", immuneSystemDictionary[fitzData.immune_health]);
+
+        // console.log("fitzData.genetics:", fitzData.genetics);
+        // console.log("familyHistoryValue:", familyHistoryDictionary[fitzData.genetics]);
+
+        // console.log("fitzData.averageSunExposure:", fitzData.averageSunExposure);
+        // console.log("sunExposureValue:", sunExposureDictionary[fitzData.averageSunExposure]);
+
+        // Perform weighted calculations
         const skinTypeValue = skinTypeDictionary[fitzData.skinType];
-        const geneticsValue = immuneSystemDictionary[fitzData.immune_health ];
+        const geneticsValue = immuneSystemDictionary[fitzData.immune_health];
         const familyHistoryValue = familyHistoryDictionary[fitzData.genetics];
         const sunExposureValue = sunExposureDictionary[fitzData.averageSunExposure];
-        // Need to compute the risk assessment
-        
+
+        // console.log("✅ Raw values for weighting:");
+        // console.log({ skinTypeValue, geneticsValue, familyHistoryValue, sunExposureValue });
+
+        // Log the weighted values
         const skinTypeWeighted = getWeightedValue(skinTypeValue, 0.2);
         const geneticsWeighted = getWeightedValue(geneticsValue, 0.05);
         const familyHistoryWeighted = getWeightedValue(familyHistoryValue, 0.05);
         const sunExposureWeighted = getWeightedValue(sunExposureValue, 0.2);
-        
+
+        console.log("✅ Weighted Values:");
+        console.log({ skinTypeWeighted, geneticsWeighted, familyHistoryWeighted, sunExposureWeighted });
+
         const overallValue = skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
-        
+
+        console.log("🧮 overallValue:", overallValue);
+
+
         const riskScoreAssessment = overallValue / 4; 
 
 
         const nlpResponse = await googleGenAi(fitzData.skinType, fitzData.averageSunExposure, fitzData.immune_health, fitzData.genetics);
         
+        console.log({ riskScoreAssessment });
         console.log({ nlpResponse });
         const data = {
             riskAssessment: riskScoreAssessment,
