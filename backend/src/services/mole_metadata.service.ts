@@ -35,13 +35,13 @@ export const createMoleMetadata = async(
     try {
         console.log("Mole owner", mole_owner);        
         
-        // Disable supabase for now
-        // const cloudData = await uploadBase64ImageToSupabase(photoUri, mole_owner);
+        // Enabled supabase for now
+        const cloudData = await uploadBase64ImageToSupabase(photoUri, mole_owner);
 
-        const cloudData = {
-            signedUrl: 'WashingMachine.ts',
-            publicUrl: 'WashmeNaeNae'
-        }
+        // const cloudData = {
+        //     signedUrl: 'WashingMachine.ts',
+        //     publicUrl: 'WashmeNaeNae'
+        // }
         
         const isOrientationValid = isBodyPart(bodyOrientation);
 
@@ -106,17 +106,18 @@ export const modelApi = async(photoUri: string) => {
 export const createAssessment = async(
     moleId: string, 
     riskAssessment: number, 
-    nlpResponse: string 
+    nlpResponse: string,
+    stringValueOfModelAssessment: string
 ): Promise<I_Asessment> => {
     try {
         // Model assessment
         // Risk assessment -> Fitzpatrick
         // Risk Summary -> Contact some NLP
-        console.log(`Mole id: ${moleId}, RA: ${riskAssessment}, nlp: ${nlpResponse}`);
+        console.log(`Mole id: ${moleId}, RA: ${riskAssessment}, nlp: ${nlpResponse}, assessment: ${stringValueOfModelAssessment}`);
         const result = await prisma.mole_Assessment.create({
             data: {
                 risk_assessment: riskAssessment,
-                model_assessment: "Benign",
+                model_assessment: stringValueOfModelAssessment,
                 risk_summary: nlpResponse,
                 mole_ref: {
                     connect: { id: moleId }, // ✅ connect relation manually
@@ -261,13 +262,19 @@ export const deleteMoleById = async (moleId: string) => {
     }
 }
 
-export const recheckMole = async(moleId: string, photoUri: string) => {
+export const recheckMole = async(moleId: string, photoUri: string, userId: string) => {
     try {
         if (!moleId) throw new ValidationError("Mole is missing");
 
+        // This lacks the actual upload right
+
+        const cloudData = await uploadBase64ImageToSupabase(photoUri, userId);
         const result = await prisma.mole_MetaData.update({
             where: { id: moleId },
-            data: { cloudId: photoUri }
+            data: { 
+                cloudId: cloudData.signedUrl,
+                publicId: cloudData.publicUrl
+             }
         })
 
         return result;
@@ -276,7 +283,12 @@ export const recheckMole = async(moleId: string, photoUri: string) => {
     }
 }
 
-export const updateAssessment = async(id: string, nlpResponse: string, riskAssessment: number) => {
+export const updateAssessment = async(
+    id: string, 
+    nlpResponse: string, 
+    riskAssessment: number, 
+    stringValueOfModelAssessment: string
+) => {
     try {
         if (!id) throw new ValidationError("Mole id is missing");
 
@@ -285,7 +297,7 @@ export const updateAssessment = async(id: string, nlpResponse: string, riskAsses
             data: { 
                 risk_assessment: riskAssessment,
                 risk_summary: nlpResponse,
-                model_assessment: "Benign"
+                model_assessment: stringValueOfModelAssessment
             }
         })
 

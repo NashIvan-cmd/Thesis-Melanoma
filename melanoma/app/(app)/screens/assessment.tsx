@@ -12,6 +12,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAssessmentStore } from '@/services/useAssessmentStore';
+import { router } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
@@ -55,6 +56,10 @@ const Assessment = () => {
       day: 'numeric'
     });
   };
+
+  const handleNavigateToPhoto = () => {
+    router.navigate("/(app)/(tabs)/(photo)")
+  }
 
   return (
     <SafeAreaView style={styles.container} className='p-2'>
@@ -147,8 +152,9 @@ const Assessment = () => {
         <TouchableOpacity 
           style={styles.actionButton}
           activeOpacity={0.8}
+          onPress={handleNavigateToPhoto}
         >
-          <Text style={styles.actionButtonText}>Find a Dermatologist Near You</Text>
+          <Text style={styles.actionButtonText}>Back to Main Screen</Text>
           <Feather name="arrow-right" size={18} color="#FFFFFF" />
         </TouchableOpacity>
       </ScrollView>

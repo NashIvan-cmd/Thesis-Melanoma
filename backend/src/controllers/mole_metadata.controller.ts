@@ -16,6 +16,7 @@ interface Imole_metadata {
     moleOwner: string;
     photoUri: string;
     id: string;
+    modelAssessment: string;
 }
 
 interface Imole_metadataReponse {
@@ -51,12 +52,14 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
             bodyOrientation,
             moleOwner,
             photoUri,
-            id 
+            id,
+            modelAssessment
         }: Imole_metadata = req.body;
     try {
     
         const parsedX = parseInt(x_coordinate);
         const parsedY = parseInt(y_coordinate);
+        const model_assessment = parseFloat(modelAssessment);
 
         const parsedBodyOrientation = bodyOrientationParser(bodyOrientation);
         // I am not satisfied with this logic.
@@ -78,7 +81,7 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         //     );
 
         //     responseResult = result;
-        //     const fitzData = await computationalModel(moleOwner, "Benign");
+        //     const fitzData = await computationalModel(moleOwner, model_assessment);
         //     assessment = await createAssessment(id, fitzData.riskAssessment, fitzData.nlpResponse);
         // } else {
         //     // Update the picture for that mole and the response
@@ -103,8 +106,8 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         );
 
         responseResult = result;
-        const fitzData = await computationalModel(moleOwner, "Benign");
-        assessment = await createAssessment(result.id, fitzData.riskAssessment, fitzData.nlpResponse);
+        const compModelResponse = await computationalModel(moleOwner, model_assessment);
+        assessment = await createAssessment(result.id, compModelResponse.riskAssessment, compModelResponse.nlpResponse, compModelResponse.stringValueOfProbability);
 
         // Do I return the mole back to frontend?
         // The image needs to be returned
@@ -228,14 +231,18 @@ export const updateMoleController = async(req: Request, res: Response, next: Nex
 }
 
 export const recheckMoleController = async(req: Request, res: Response, next: NextFunction) => {
-        const { moleId, photoUri, userId } = req.body
+        const { moleId, photoUri, userId, modelAssessment } = req.body
         console.log('MoleId', moleId);
     try {
-        const moleData = await recheckMole(moleId, photoUri);
 
+        if (!userId) throw new ValidationError("Missing user id");
+        if (!modelAssessment) throw new ValidationError("Missing model assessment");
+
+        const moleData = await recheckMole(moleId, photoUri, userId);
         const moleAssessment = await findMoleAssessment(moleId);
-        const fitzData = await computationalModel(userId, "Benign");
-        const assessmentResult = await updateAssessment(moleAssessment,  fitzData.nlpResponse, fitzData.riskAssessment);
+        const model_assessment = parseFloat(modelAssessment);
+        const compModelResponse = await computationalModel(userId, model_assessment);
+        const assessmentResult = await updateAssessment(moleAssessment,  compModelResponse.nlpResponse, compModelResponse.riskAssessment, compModelResponse.stringValueOfProbability);
 
         res.status(200).json({ 
             message: "Successful", 

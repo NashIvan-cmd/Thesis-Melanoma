@@ -153,7 +153,7 @@ const ImageSourceSelector = () => {
         setIsAnalyzing(false);
         
         // Navigate to assessment screen
-        router.navigate("/assessment");
+        router.navigate("/(app)/screens/assessment");
     } catch (error) {
         console.error("Error @ process image request", error);
         setIsAnalyzing(false);

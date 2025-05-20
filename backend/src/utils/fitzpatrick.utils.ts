@@ -37,7 +37,7 @@ export const sunExposureDictionary: fitzDictionary<number> = {
 };
 
 
-export const computationalModel = async(userId: string, modelAssessment: string) => {
+export const computationalModel = async(userId: string, modelAssessment: number) => {
     // 50% Model Assessment CNN
     // 20% Sun Exposure
     // 5% Family History
@@ -54,13 +54,15 @@ export const computationalModel = async(userId: string, modelAssessment: string)
             }
         });
 
+        const probabilityMalignancy = modelAssessmentRiskScore(modelAssessment);
+        const stringValueOfProbability = modelAssessmentThreshold(probabilityMalignancy);
+
         if (!fitzData) throw new NotFoundError("Fitzpatrick not found");
 
         console.log({ fitzData });
 
         if (fitzData.immune_health == undefined ) throw new ValidationError("Immune health undefined")
          
-
         if (fitzData.genetics == undefined) throw new ValidationError("Genetics undefined")
 
         if (fitzData.averageSunExposure == undefined) throw new ValidationError("Sun exposure undefined")
@@ -88,6 +90,7 @@ export const computationalModel = async(userId: string, modelAssessment: string)
         // console.log({ skinTypeValue, geneticsValue, familyHistoryValue, sunExposureValue });
 
         // Log the weighted values
+        const modelAssessmentWeighted = getWeightedValue(probabilityMalignancy, 0.5);
         const skinTypeWeighted = getWeightedValue(skinTypeValue, 0.2);
         const geneticsWeighted = getWeightedValue(geneticsValue, 0.05);
         const familyHistoryWeighted = getWeightedValue(familyHistoryValue, 0.05);
@@ -96,21 +99,22 @@ export const computationalModel = async(userId: string, modelAssessment: string)
         console.log("✅ Weighted Values:");
         console.log({ skinTypeWeighted, geneticsWeighted, familyHistoryWeighted, sunExposureWeighted });
 
-        const overallValue = skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
+        const overallValue = modelAssessmentWeighted + skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
 
         console.log("🧮 overallValue:", overallValue);
 
 
-        const riskScoreAssessment = overallValue / 4; 
+        const riskScoreAssessment = overallValue / 5; 
 
 
-        const nlpResponse = await googleGenAi(fitzData.skinType, fitzData.averageSunExposure, fitzData.immune_health, fitzData.genetics);
+        const nlpResponse = await googleGenAi(stringValueOfProbability, fitzData.skinType, fitzData.averageSunExposure, fitzData.immune_health, fitzData.genetics);
         
         console.log({ riskScoreAssessment });
         console.log({ nlpResponse });
         const data = {
             riskAssessment: riskScoreAssessment,
-            nlpResponse
+            nlpResponse,
+            stringValueOfProbability
         }
 
         return data
@@ -121,4 +125,22 @@ export const computationalModel = async(userId: string, modelAssessment: string)
 
 const getWeightedValue = (value: number, weight: number) => {
     return value * weight;
+}
+
+export const modelAssessmentThreshold = (modelVal: number) => {
+    if (modelVal < 30) {
+        return "Confidently Benign"
+    } else if (modelVal > 30 && modelVal < 60) {
+        return "Probably Benign"
+    } else if (modelVal > 60 && modelVal < 79) {
+        return "Probably Malignant"
+    } else {
+        return "Confidently Malignant"
+    }
+}
+
+export const modelAssessmentRiskScore = (val: number) => {
+    if (val = 0) return 10;
+
+    return val * 100;
 }

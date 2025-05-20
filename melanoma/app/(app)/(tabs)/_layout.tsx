@@ -1,29 +1,45 @@
 import { Tabs } from 'expo-router';
 import Ionicons from '@expo/vector-icons/Ionicons';
+import { Platform } from 'react-native';
 
 export default function TabLayout() {
+  // Medical-themed colors
+  const activeColor = '#4caf50'; // Medical green
+  const backgroundColor = '#ffffff'; // Clean white background
+  const headerColor = '#f5f5f5'; // Light gray header
+  const textColor = '#333333'; // Dark text for better readability
+
   return (
     <Tabs
-        initialRouteName='index'
-        screenOptions={{
-            tabBarActiveTintColor: '#ffd33d',
-            headerStyle: {
-            backgroundColor: '#25292e',
-            },
-            headerShadowVisible: false,
-            headerTintColor: '#fff',
-            tabBarStyle: {
-            backgroundColor: '#25292e',
-            },
-        }}
+      initialRouteName='index'
+      screenOptions={{
+        tabBarActiveTintColor: activeColor,
+        tabBarInactiveTintColor: '#757575',
+        headerStyle: {
+          backgroundColor: headerColor,
+        },
+        headerShadowVisible: false,
+        headerTintColor: textColor,
+        tabBarStyle: {
+          backgroundColor: backgroundColor,
+          height: Platform.OS === 'android' ? 60 : 'auto', // Fix for Android bottom tab height
+          paddingBottom: Platform.OS === 'android' ? 8 : 'auto',
+          borderTopWidth: 1,
+          borderTopColor: '#e0e0e0',
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '500',
+        }
+      }}
     >
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Body',
+          title: 'Health',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'body-sharp' : 'body-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'heart' : 'heart-outline'} color={color} size={24} />
           ),
         }}
       />
@@ -33,28 +49,19 @@ export default function TabLayout() {
           title: 'Symptoms',
           headerShown: false,
           tabBarIcon: ({ focused, color }) => (
-            <Ionicons name={focused ? 'shield-checkmark' : 'shield-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'medkit' : 'medkit-outline'} color={color} size={24} />
           ),
         }}
       />
       <Tabs.Screen
         name="(photo)"
         options={{
-          title: 'Camera',
+          title: 'Scan',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'camera' : 'camera-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'scan' : 'scan-outline'} color={color} size={24} />
           ),
         }} 
-      />
-      <Tabs.Screen
-        name="about"
-        options={{
-          title: 'About',
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'information-circle' : 'information-circle-outline'} color={color} size={24} />
-          ),
-        }}
       />
       <Tabs.Screen 
         name="(settings)"
@@ -62,7 +69,7 @@ export default function TabLayout() {
           title: 'Settings',
           headerShown: false,
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? 'settings-sharp' : 'settings-outline'} color={color} size={24} />
+            <Ionicons name={focused ? 'settings' : 'settings-outline'} color={color} size={24} />
           ),
         }}
       />

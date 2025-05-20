@@ -3,6 +3,7 @@ import { useAssessmentStore } from "@/services/useAssessmentStore";
 import { useRecheckMoleStore } from "@/services/useRecheckStore";
 import { parse } from "@babel/core";
 import { API_URL } from "@env";
+import mime from 'mime';
 
 interface assessmentResponse {
     id: string;
@@ -48,34 +49,51 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
     } = useImageStore.getState();
     try {
 
+        console.log("Trying the model");
+
         if (!uri) {
+            console.log("No uri", uri);
             return;
         }
 
-        // const response = await fetch(uri);
-        // const blob = await response.blob();
-    
-        // // Create FormData and append the file
-        // const formData = new FormData();
-        // formData.append("file", {
-        // uri: uri,
-        // name: "image.jpg",
-        // type: "image/jpeg"
-        // } as any);
+        let modelResponse;
 
-        // const res = await fetch("https://melanoma-api-1.onrender.com/predict", {
-        // method: "POST",
-        // body: formData,
-        // });
+        try {
+            console.log("Model request starts here");
 
-        
-        // if (!res.ok) {
-        // throw new Error(`Server responded with status: ${res.status}`);
-        // }
-        
-        // const parsedRes = await res.json();
+            const fileType = mime.getType(uri) || 'image/jpeg';
+            const fileBlob = {
+                uri: uri, // your `file://...` path
+                name: uri.split('/').pop() || 'image.jpg',
+                type: fileType
+            };
 
-        // console.log({ parsedRes });
+            const formData = new FormData();
+            formData.append('file', fileBlob as any);
+
+            const res = await fetch("https://melanoma-api-xfxl.onrender.com/predict", {
+                method: "POST",
+                body: formData,
+                headers: {
+                    // Let fetch automatically set the correct Content-Type (multipart/form-data with boundary)
+                    // Do NOT manually set 'Content-Type'
+                },
+            });
+
+            console.log("Model response done");
+
+            console.log({ res });
+            if (!res.ok) {
+                throw new Error(`Server responded with status: ${res.status}`);
+            }
+            
+             modelResponse = await res.json();
+            console.log({ modelResponse });
+        } catch (error) {
+            console.error("Error @  model req: ", error);
+        }
+
+        // ====Python Model Above ==== Typescript backend Below
 
         if (moleId) {
         // If moleId exists, call the update or recheck endpoint
@@ -83,14 +101,15 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
         const result = await fetch(`${API_URL}/v1/recheck/mole`, {
             method: "POST",
             headers: {
-            "Content-Type": "application/json",
-            authorization: accessToken ? `Bearer ${accessToken}` : '',
+                "Content-Type": "application/json",
+                authorization: accessToken ? `Bearer ${accessToken}` : '',
             },
-            body: JSON.stringify({
-                moleId,
-                photoUri: uri,
-                userId,
-            }),
+                body: JSON.stringify({
+                    moleId,
+                    photoUri: uri,
+                    userId,
+                    modelResponse,
+                }),
         });
 
         const data = await result.json();
@@ -103,15 +122,16 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
         const result = await fetch(`${API_URL}/v1/metadata/mole`, {
             method: "POST",
             headers: {
-            "Content-Type": "application/json",
-            authorization: accessToken ? `Bearer ${accessToken}` : '',
+                "Content-Type": "application/json",
+                authorization: accessToken ? `Bearer ${accessToken}` : '',
             },
             body: JSON.stringify({
-            x_coordinate,
-            y_coordinate,
-            bodyOrientation,
-            moleOwner: userId,
-            photoUri: uri,
+                x_coordinate,
+                y_coordinate,
+                bodyOrientation,
+                moleOwner: userId,
+                photoUri: uri,
+                modelResponse
             }),
         });
 

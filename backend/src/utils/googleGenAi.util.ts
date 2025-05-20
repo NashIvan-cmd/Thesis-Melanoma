@@ -9,13 +9,13 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-export async function googleGenAi(skinType: string, sunExposure: string, immuneHealth: string, history: string) {
+export async function googleGenAi(stringValueOfModelAssessment: string, skinType: string, sunExposure: string, immuneHealth: string, history: string) {
   const ai = new GoogleGenAI({
     apiKey: process.env.GEMINI_API_KEY,
   });
   const config = {
     responseMimeType: 'text/plain',
-    maxOutputTokens: 10,
+    maxOutputTokens: 500,
   };
   const model = 'gemini-2.0-flash-lite';
   const contents = [
@@ -23,15 +23,17 @@ export async function googleGenAi(skinType: string, sunExposure: string, immuneH
       role: 'user',
       parts: [
         {
-          text: `Explain how the following parameter affects likelihood of melanoma
-          1st Parameter ${skinType} -> This is about fitzpatrick scale study 
-          2nd Parameter ${sunExposure} -> Based on the user skin type recommend sun exposure limit
-          3rd Parameter ${immuneHealth} -> Talks about the weakness of users health
-          4th Parameter ${history}  -> Family History of melanoma increases chances of having melanoma also.
-          Only talk about the particular parameter if it applies.
-          No need for trivia please do go straight to the point maximum of 300 words 
-          Give general recommendations on how to avoid melanoma. 
-          Make sure your response is for the user and put it on essay form`,
+          text:
+           `You are given a main melanoma risk assessment result: **${stringValueOfModelAssessment}**.
+          Explain how this primary condition relates to the user's individual risk of melanoma.
+
+          Use the following subparameters to support your explanation **only if they are relevant** to the main condition:
+          1. **Skin Type** (${skinType}) — Reflects the user's Fitzpatrick classification. Consider how this affects sensitivity to UV damage and melanoma likelihood.
+          2. **Sun Exposure** (${sunExposure}) — Evaluate whether the user’s reported exposure level increases or decreases their risk, considering their skin type and the main assessment.
+          3. **Immune Health** (${immuneHealth}) — Discuss whether the user's immune status amplifies melanoma risk based on the given condition.
+          4. **Family History** (${history}) — Consider if a genetic predisposition contributes to the current assessment.
+
+          Write in concise essay form (maximum 300 words), focused only on relevant parameters. Avoid unrelated details or trivia. End with **general, practical recommendations** for reducing melanoma risk.`
         },
       ],
     },
