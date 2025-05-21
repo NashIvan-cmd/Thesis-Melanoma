@@ -16,7 +16,8 @@ interface Imole_metadata {
     moleOwner: string;
     photoUri: string;
     id: string;
-    modelAssessment: string;
+    modelResponse: string;
+    bodyPartName: string;
 }
 
 interface Imole_metadataReponse {
@@ -53,13 +54,15 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
             moleOwner,
             photoUri,
             id,
-            modelAssessment
+            modelResponse,
+            bodyPartName
         }: Imole_metadata = req.body;
     try {
-    
+        
+        console.log({ modelResponse });
         const parsedX = parseInt(x_coordinate);
         const parsedY = parseInt(y_coordinate);
-        const model_assessment = parseFloat(modelAssessment);
+        const model_assessment = parseFloat(modelResponse);
 
         const parsedBodyOrientation = bodyOrientationParser(bodyOrientation);
         // I am not satisfied with this logic.
@@ -102,7 +105,8 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
             body_part,
             parsedBodyOrientation,
             photoUri, 
-            moleOwner
+            moleOwner,
+            bodyPartName
         );
 
         responseResult = result;
@@ -231,16 +235,17 @@ export const updateMoleController = async(req: Request, res: Response, next: Nex
 }
 
 export const recheckMoleController = async(req: Request, res: Response, next: NextFunction) => {
-        const { moleId, photoUri, userId, modelAssessment } = req.body
+        const { moleId, photoUri, userId, modelResponse, bodyPartName } = req.body
         console.log('MoleId', moleId);
     try {
-
+        console.log({ modelResponse });
         if (!userId) throw new ValidationError("Missing user id");
-        if (!modelAssessment) throw new ValidationError("Missing model assessment");
+        if (!modelResponse) throw new ValidationError("Missing model assessment");
 
-        const moleData = await recheckMole(moleId, photoUri, userId);
+        const moleData = await recheckMole(moleId, photoUri, userId, bodyPartName);
         const moleAssessment = await findMoleAssessment(moleId);
-        const model_assessment = parseFloat(modelAssessment);
+
+        const model_assessment = parseFloat(modelResponse);
         const compModelResponse = await computationalModel(userId, model_assessment);
         const assessmentResult = await updateAssessment(moleAssessment,  compModelResponse.nlpResponse, compModelResponse.riskAssessment, compModelResponse.stringValueOfProbability);
 

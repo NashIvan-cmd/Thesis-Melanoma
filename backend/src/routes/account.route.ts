@@ -7,7 +7,9 @@ import {
     createAccount, 
     generateCode, 
     requestPasswordReset, 
-    resetPasswordController} from "../controllers/account.controller";
+    resetPasswordController,
+    deleteAccountController
+} from "../controllers/account.controller";
 import { validateToken } from "../controllers/authenticate.controller";
 
 const router = express.Router();
@@ -20,6 +22,8 @@ router.post('/v1/password/change', changePasswordController);
 router.post('/v1/password/verify/details/reset', requestPasswordReset as any);
 router.post('/v1/password/reset', resetPasswordController);
 // router.post('/v1/reset/password', requestPasswordReset);
+
+router.delete('/v1/account/:id', deleteAccountController);
 
 router.get('/v1/agreement/check', checkAgreementController);
 

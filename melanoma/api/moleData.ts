@@ -40,12 +40,13 @@ interface MoleResponse {
 }
 
 export const moleData = async(accessToken: string, userId: string): Promise<I_Assessment | undefined> => {
-    const { moleId, userId: recheckUserId, resetRecheck } = useRecheckMoleStore.getState();
+    const { moleId, userId: recheckUserId, resetRecheck, bodyPartNameV2 } = useRecheckMoleStore.getState();
     const {
         x_coordinate,
         y_coordinate,
         bodyOrientation,
         uri,
+        bodyPartName
     } = useImageStore.getState();
     try {
 
@@ -95,6 +96,7 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
 
         // ====Python Model Above ==== Typescript backend Below
 
+        const modelProbability = modelResponse.probability
         if (moleId) {
         // If moleId exists, call the update or recheck endpoint
         console.log('with Mole Id');
@@ -108,7 +110,8 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
                     moleId,
                     photoUri: uri,
                     userId,
-                    modelResponse,
+                    modelResponse: modelProbability,
+                    bodyPartName
                 }),
         });
 
@@ -131,7 +134,8 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
                 bodyOrientation,
                 moleOwner: userId,
                 photoUri: uri,
-                modelResponse
+                modelResponse: modelProbability,
+                bodyPartName: bodyPartNameV2
             }),
         });
 

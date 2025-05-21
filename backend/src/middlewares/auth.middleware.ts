@@ -13,7 +13,7 @@ export const refreshTokenGenerator = (username: string): string => {
             throw new Error;
         }
 
-        const refreshToken = jwt.sign({ username: username }, secret, { expiresIn: '7d' });
+        const refreshToken = jwt.sign({ username: username }, secret, { expiresIn: '30d' });
 
         console.log({ refreshToken });
 
@@ -31,7 +31,7 @@ export const authenticateRefreshToken = (refreshToken: string): boolean | undefi
         }
 
         const splittedRefreshToken = refreshToken.split(" ")[1]
-        console.log( {splittedRefreshToken });
+        console.log( { splittedRefreshToken });
 
         if (!splittedRefreshToken) {
             return false;
@@ -63,7 +63,7 @@ export const accessTokenGenerator  = (username: string) => {
             throw new Error;
         }
 
-        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '3h' });
+        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '1d' });
 
         console.log({ accessToken });
 

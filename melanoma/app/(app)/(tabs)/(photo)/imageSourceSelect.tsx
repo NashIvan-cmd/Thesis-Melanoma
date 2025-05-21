@@ -7,6 +7,8 @@ import { useFocusEffect } from '@react-navigation/native';
 
 import BackButton from '@/components/backButton';
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
+import { Input, InputField, InputSlot, InputIcon } from '@/components/ui/input';
+import { FormControl, FormControlLabel, FormControlLabelText, FormControlHelper, FormControlHelperText } from '@/components/ui/form-control';
 import { useImageStore } from '@/services/imageStore';
 import { Image } from 'expo-image';
 import { convertToBase64 } from '@/services/imageManipulation';
@@ -22,14 +24,15 @@ import { I_Assessment } from '@/api/moleData';
 
 const ImageSourceSelector = () => {
   const { accessToken, userId } = useSession();
-  const { setImageData } = useImageStore();
-  const { uri } = useImageStore.getState();
+  const { setImageData, setBodyPartName, reset } = useImageStore();
+  const { uri, bodyPartName } = useImageStore.getState();
   const { setAssessmentData } = useAssessmentStore();
-  const { resetRecheck } = useRecheckMoleStore();
+  const { resetRecheck, setBodyPartNameV2 } = useRecheckMoleStore();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState({ visible: false, message: "" });
   const [shouldResetOnBlur, setShouldResetOnBlur] = useState(true);
+  const [localBodyPartName, setLocalBodyPartName] = useState(bodyPartName || '');
   const navigation = useNavigation();
   
   // Use a ref to track the current state instead of relying on the state variable directly
@@ -39,6 +42,19 @@ const ImageSourceSelector = () => {
   useEffect(() => {
     shouldResetRef.current = shouldResetOnBlur;
   }, [shouldResetOnBlur]);
+
+  // Initialize local state with store values
+  useEffect(() => {
+    setLocalBodyPartName(bodyPartName || '');
+  }, [bodyPartName]);
+
+  // Save body part name to store when field loses focus
+  const handleBodyPartSave = () => {
+    if (localBodyPartName.trim()) {
+      setBodyPartName(localBodyPartName.trim());
+      setBodyPartNameV2(localBodyPartName.trim());
+    }
+  };
 
   // Handle screen focus and blur
   useFocusEffect(
@@ -122,6 +138,18 @@ const ImageSourceSelector = () => {
   };
 
   const processImageRequest = async() => {
+    // Validate that body part name is provided
+    if (!localBodyPartName.trim()) {
+      setError({
+        visible: true,
+        message: "Please enter a body part name before analyzing. Be super specific"
+      });
+      return;
+    }
+    
+    // Save body part name to store
+    setBodyPartName(localBodyPartName.trim());
+    
     try {
         // Clear any previous errors
         setError({ visible: false, message: "" });
@@ -175,6 +203,8 @@ const ImageSourceSelector = () => {
           visible: true,
           message: errorMessage
         });
+    } finally {
+      reset();
     }
   }
 
@@ -243,6 +273,26 @@ const ImageSourceSelector = () => {
             )}
           </View>
 
+          {/* Body Part Name Input Field (GlueStack) */}
+          <FormControl className="mb-4">
+            <FormControlLabel>
+              <FormControlLabelText className="text-slate-700 font-medium">Body Part Location</FormControlLabelText>
+            </FormControlLabel>
+            <Input size="md" variant="outline" className="border border-slate-300 rounded-lg bg-white">
+              <InputField
+                placeholder="e.g. Left Arm, Back, Right Shoulder"
+                value={localBodyPartName}
+                onChangeText={setLocalBodyPartName}
+                onBlur={handleBodyPartSave}
+              />
+            </Input>
+            <FormControlHelper>
+              <FormControlHelperText className="text-xs text-slate-500">
+                Please specify the location of the skin concern
+              </FormControlHelperText>
+            </FormControlHelper>
+          </FormControl>
+
           <View className="gap-3 mb-6">
             {Platform.OS === 'ios' ? (
                 <ButtonGlue size='lg' className="bg-teal-600 w-full">
@@ -303,8 +353,8 @@ const ImageSourceSelector = () => {
       <View className="absolute bottom-0 left-0 right-0 bg-white border-t border-gray-200 p-4 shadow-lg">
         <ButtonGlue 
           onPress={processImageRequest} 
-          isDisabled={!uri || isAnalyzing}
-          className={`${!uri || isAnalyzing ? 'bg-blue-400' : error.visible ? 'bg-blue-700' : 'bg-blue-700'} h-14 py-4 rounded-xl shadow-md w-full`}>
+          isDisabled={!uri || isAnalyzing || !localBodyPartName.trim()}
+          className={`${!uri || isAnalyzing || !localBodyPartName.trim() ? 'bg-blue-400' : error.visible ? 'bg-blue-700' : 'bg-blue-700'} h-14 py-4 rounded-xl shadow-md w-full`}>
             <ButtonText className="text-lg font-medium">
               {isAnalyzing ? 'Analyzing...' : error.visible ? 'Retry Analysis' : 'Analyze Image'}
             </ButtonText>

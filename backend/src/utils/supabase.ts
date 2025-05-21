@@ -60,15 +60,36 @@ export const uploadBase64ImageToSupabase = async (
 };
 
 
-export const deleteImageFromSupabase = async (cloudId: string) => {
-  const { data, error } = await supabase.storage
-    .from('melanoma-thesis')
-    .remove([cloudId]);
+export const deleteUserMolesFolder = async (userId: string) => {
+  const folderPath = `moles/${userId}/`; // the user's folder path
 
-  if (error) {
-    console.error('Error removing file:', error);
-    throw error;
+  // Step 1: List all files inside the user's folder
+  const { data: files, error: listError } = await supabase.storage
+    .from('melanoma-thesis')
+    .list(folderPath);
+
+  if (listError) {
+    console.error('Error listing files:', listError);
+    throw listError;
   }
 
-  return data;
+  if (!files || files.length === 0) {
+    console.log('No files found to delete.');
+    return;
+  }
+
+  // Step 2: Construct full file paths to delete
+  const filesToDelete = files.map(file => folderPath + file.name);
+
+  // Step 3: Delete all files at once
+  const { data: deleteData, error: deleteError } = await supabase.storage
+    .from('melanoma-thesis')
+    .remove(filesToDelete);
+
+  if (deleteError) {
+    console.error('Error deleting files:', deleteError);
+    throw deleteError;
+  }
+
+  return deleteData;
 };

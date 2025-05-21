@@ -2,17 +2,18 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { hashPassword } from "../utils/account.utils";
 import { ValidationError } from "../middlewares/error.middleware";
 import { deleteAssessmentByMoleRef, deleteMoleById } from "./mole_metadata.service";
-import { deleteImageFromSupabase } from "../utils/supabase";
 
 const prisma = new PrismaClient();
 
 export const findUser = async(username: string, password: string) => {
     console.log(`Passed username ${username} password ${password}`);
     try {
+
+        const cleanUsername = username.trim();
         const user = await prisma.user_Account.findFirst({
             where: { 
                 OR: [
-                    { username: username }, 
+                    { username: cleanUsername }, 
                     { email: username }
                 ]
             }
@@ -24,8 +25,11 @@ export const findUser = async(username: string, password: string) => {
 
         console.log('User password', user.password);
 
+        const userPass = user.password;
         const hashedPassword = hashPassword(password);
-        const isValidPassword = password === user.password ? true : false;
+        console.log({ hashedPassword });
+        console.log({ userPass });
+        const isValidPassword = hashedPassword === user.password ? true : false;
 
         if (!isValidPassword) {
             throw new ValidationError('Invalid password');
@@ -88,19 +92,45 @@ export const changePassword = async(id: string, newPassword: string) => {
 
 export const deleteAccountService = async(molesArr: any) => {
     try {
+        if (!molesArr || molesArr.length === 0) {
+            return; // No moles to delete
+        }
         
-        const result = await Promise.all(
+        // Track any failures during the operation
+        const failures: string[] = [];
+        
+        // Delete assessments first
+        await Promise.allSettled(
             molesArr.map(async(mole: any) => {
-                await deleteAssessmentByMoleRef(mole.id);
-                await deleteImageFromSupabase(mole.cloudId);
+                try {
+                    await deleteAssessmentByMoleRef(mole.id);
+                } catch (error) {
+                    console.error(`Failed to delete assessments for mole ${mole.id}:`, error);
+                    failures.push(`assessment-${mole.id}`);
+                    // Continue with other moles
+                }
             })       
-        )
+        );
 
-        await Promise.all(
+        // Then delete the moles
+        await Promise.allSettled(
             molesArr.map(async(mole: any) => {
-                await deleteMoleById(mole.id);
+                try {
+                    await deleteMoleById(mole.id);
+                } catch (error) {
+                    console.error(`Failed to delete mole ${mole.id}:`, error);
+                    failures.push(`mole-${mole.id}`);
+                    // Continue with other moles
+                }
             })
-        )
+        );
+
+        // If there were any failures, throw an error with details
+        if (failures.length > 0) {
+            const error = new Error(`Failed to delete ${failures.length} items`);
+            error.name = 'PartialDeletionError';
+            throw error;
+        }
 
         return;
     } catch (error) {

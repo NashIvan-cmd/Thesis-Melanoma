@@ -9,6 +9,7 @@ import dotenv from "dotenv";
 import jwt from "jsonwebtoken";
 import { NotFoundError, ValidationError } from "../middlewares/error.middleware";
 import { getAllMoleByUserId } from "../services/mole_metadata.service";
+import { deleteUserMolesFolder } from "../utils/supabase";
 
 const prisma = new PrismaClient();
 
@@ -94,29 +95,30 @@ export const generateCode = async(req: Request, res: Response, next: NextFunctio
     }
 }
 
+// @ComputerKing19
 export const authenticateLogin = async(req: Request, res: Response, next: NextFunction) => {
     const refreshT = req.headers.cookie;
     console.log("Checking refresh T", refreshT);
     console.log("Client Request", req.body);
     const { username, password }: IUser = req.body;
     try {
-        // if (!username || !password) {
-        //     res.status(201).json({
-        //         message: 'Incomplete credentials'
-        //     })
-        // }
+        if (!username || !password) {
+            res.status(201).json({
+                message: 'Incomplete credentials'
+            })
+        }
 
-        // const user = await findUser(username, password);
-        const userId = "6dcd4fb5-193a-4470-947e-c1f635c3f5b6";
+        const user = await findUser(username, password);
+        const userId = user.id;
 
-       const accessToken = accessTokenGenerator("GorgcTest");
+       const accessToken = accessTokenGenerator(user.username);
     
        let refreshToken = refreshT;
        if (refreshT) {
         // Validate if not expired
         console.log("Refresh token value", refreshT);
        } else {
-        refreshToken = refreshTokenGenerator("GorgcTest");
+        refreshToken = refreshTokenGenerator(user.username);
        }
       
 
@@ -131,6 +133,8 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
             accessToken,
             refreshToken,
             userId,
+            username: user.username,
+            email: user.email,
             message: 'Successful login',
             success: true
         });
@@ -270,12 +274,91 @@ export const resetPasswordController = async(req: Request, res: Response, next: 
 
 
 export const deleteAccountController = async(req: Request, res: Response, next: NextFunction) => {
-    const { accountId } = req.body
+    const { id: accountId } = req.params
     try {
+        // First check if account exists
+        const userAccount = await prisma.user_Account.findUnique({
+            where: { id: accountId }
+        });
+        
+        if (!userAccount) {
+             res.status(404).json({ 
+                success: false,
+                message: 'Account not found' 
+            });
+            return;
+        }
+
+        // Get all moles associated with this user
         const allMoles: any = await getAllMoleByUserId(accountId);
         
-        await deleteAccountService(allMoles);
+        // Track each operation's success or failure
+        const results = {
+            molesAndAssessments: true,
+            storageFiles: true,
+            accountDeletion: true
+        };
+        
+        // Delete moles and assessments with error tracking
+        try {
+            await deleteAccountService(allMoles);
+        } catch (error) {
+            console.error('Error deleting moles and assessments:', error);
+            results.molesAndAssessments = false;
+            // Continue with other operations
+        }
+        
+        // Delete user files with error tracking
+        try {
+            await deleteUserMolesFolder(accountId);
+        } catch (error) {
+            console.error('Error deleting user files from storage:', error);
+            results.storageFiles = false;
+            // Continue with other operations
+        }
+        
+        // Delete the account itself last
+        try {
+            await prisma.user_Account.delete({ 
+                where: { id: accountId }
+            });
+        } catch (error) {
+            console.error('Error deleting user account:', error);
+            results.accountDeletion = false;
+        }
+        
+        // Determine overall status based on operation results
+        if (results.molesAndAssessments && results.storageFiles && results.accountDeletion) {
+             res.status(200).json({ 
+                success: true,
+                message: 'Account and associated data deleted successfully' 
+            });
+            return;
+        } else {
+            // Partial deletion occurred - report what succeeded and what failed
+            let message = 'Account deletion partially completed: ';
+            const failures = [];
+            
+            if (!results.molesAndAssessments) failures.push('health data');
+            if (!results.storageFiles) failures.push('stored images');
+            if (!results.accountDeletion) failures.push('account information');
+            
+            message += failures.join(', ') + ' could not be completely removed.';
+            
+             res.status(207).json({  // 207 Multi-Status
+                success: false,
+                message,
+                details: results
+            });
+            return;
+        }
     } catch (error) {
-        next (error);
+        console.error('Unhandled error in account deletion:', error);
+         res.status(500).json({
+            success: false,
+            message: 'An unexpected error occurred while processing your request',
+            error: process.env.NODE_ENV === 'development' && error instanceof Error ? error.message : undefined
+        });
+        return;
     }
 }

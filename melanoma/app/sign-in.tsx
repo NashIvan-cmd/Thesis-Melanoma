@@ -29,12 +29,12 @@ export default function SignIn() {
   };
 
   // Auto redirect if session exists
-  useEffect(() => {
-    if (!isLoading && session && accessToken) {
-      console.log("Valid session found. Redirecting...");
-      router.replace('/');
-    }
-  }, [isLoading, session, accessToken]);
+  // useEffect(() => {
+  //   if (!isLoading && session && accessToken) {
+  //     console.log("Valid session found. Redirecting...");
+  //     router.replace('/');
+  //   }
+  // }, [isLoading, session, accessToken]);
 
   useEffect(() => {
     const timeoutId = setTimeout(() => {

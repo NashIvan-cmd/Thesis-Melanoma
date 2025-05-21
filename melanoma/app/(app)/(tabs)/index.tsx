@@ -79,12 +79,12 @@ export default function Index() {
           <Text>
             <Text className="text-blue-800 font-extrabold text-lg mb-1">{username}</Text>
           </Text>
-          <Text>
+          {/* <Text>
             <Text className="text-slate-600 text-md">Your last check-up was X days ago</Text>
           </Text>
           <Text>
             <Text className="text-blue-600 text-md font-medium">Result: <Text className="text-green-600">Benign</Text> | <Text className="text-red-600">Malignant</Text></Text>
-          </Text>
+          </Text> */}
         </View>
       <View className="flex flex-row w-full mt-2 mb-4 gap-4">
         <View className="flex-1 max-w-180 bg-white border border-slate-200 rounded-xl p-4 shadow-sm">

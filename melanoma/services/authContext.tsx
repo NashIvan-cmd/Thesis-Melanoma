@@ -74,8 +74,8 @@ export function SessionProvider({ children }: PropsWithChildren) {
                 // // console.log("What is happening to AT", data.accessToken);
                 setAccessToken(data.accessToken);
                 setUserId(data.userId);
-                setUsername("John Kenneth Doe");
-                setEmail("JohnDoe@gmail.com");
+                setUsername(data.username);
+                setEmail(data.email);
 
                 // setSession("abs");
                 // setAccessToken("abs");

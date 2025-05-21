@@ -107,7 +107,7 @@ const FitzPatrick = () => {
           
           {/* Bottom Take Test button */}
           <View className="mt-6">
-            <ButtonGlue className="w-full bg-blue-500 py-4 rounded-xl" onPress={handleNavigate}>
+            <ButtonGlue className="w-full bg-blue-500 py-4 h-14 rounded-xl" onPress={handleNavigate}>
               <ButtonText className="text-white font-bold text-lg">Take the Test</ButtonText>
             </ButtonGlue>
           </View>

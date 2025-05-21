@@ -54,6 +54,7 @@ export const computationalModel = async(userId: string, modelAssessment: number)
             }
         });
 
+        console.log({ modelAssessment });
         const probabilityMalignancy = modelAssessmentRiskScore(modelAssessment);
         const stringValueOfProbability = modelAssessmentThreshold(probabilityMalignancy);
 
@@ -90,6 +91,7 @@ export const computationalModel = async(userId: string, modelAssessment: number)
         // console.log({ skinTypeValue, geneticsValue, familyHistoryValue, sunExposureValue });
 
         // Log the weighted values
+        console.log({ probabilityMalignancy });
         const modelAssessmentWeighted = getWeightedValue(probabilityMalignancy, 0.5);
         const skinTypeWeighted = getWeightedValue(skinTypeValue, 0.2);
         const geneticsWeighted = getWeightedValue(geneticsValue, 0.05);
@@ -97,7 +99,7 @@ export const computationalModel = async(userId: string, modelAssessment: number)
         const sunExposureWeighted = getWeightedValue(sunExposureValue, 0.2);
 
         console.log("✅ Weighted Values:");
-        console.log({ skinTypeWeighted, geneticsWeighted, familyHistoryWeighted, sunExposureWeighted });
+        console.log({ skinTypeWeighted, geneticsWeighted, familyHistoryWeighted, sunExposureWeighted, modelAssessmentWeighted });
 
         const overallValue = modelAssessmentWeighted + skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
 
@@ -128,19 +130,20 @@ const getWeightedValue = (value: number, weight: number) => {
 }
 
 export const modelAssessmentThreshold = (modelVal: number) => {
-    if (modelVal < 30) {
-        return "Confidently Benign"
-    } else if (modelVal > 30 && modelVal < 60) {
-        return "Probably Benign"
-    } else if (modelVal > 60 && modelVal < 79) {
-        return "Probably Malignant"
-    } else {
-        return "Confidently Malignant"
-    }
-}
+  if (modelVal < 30) {
+    return "Likely Benign";
+  } else if (modelVal >= 30 && modelVal < 60) {
+    return "Possibly Benign";
+  } else if (modelVal >= 60 && modelVal < 80) {
+    return "Possibly Malignant";
+  } else {
+    return "Likely Malignant";
+  }
+};
+
 
 export const modelAssessmentRiskScore = (val: number) => {
-    if (val = 0) return 10;
+    if (val == 0) return 10;
 
     return val * 100;
 }

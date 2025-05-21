@@ -24,6 +24,12 @@ import { moleData, molesToDisplay } from '@/api/moleData';
 import { useMoleDataStore } from '@/services/moleStore';
 import { API_URL } from '@env';
 
+export type OverallAssessment = {
+  model_assessment: string;
+  risk_assessment: number;
+  risk_summary: string;
+};
+
 export type Mole = {
     id: string;
     body_orientation: string;
@@ -35,6 +41,7 @@ export type Mole = {
     publicId: string;
     createdAt: string;
     signedUrl: string;
+    overall_assessment: OverallAssessment[];
   };
 
 const Photo = () => {
@@ -160,10 +167,10 @@ const Photo = () => {
                                 </View>
                                 <View className='ml-[10]'>
                                     <Text className="text-slate-800 font-medium text-md">{item.body_part}</Text>
-                                    <Text className='text-slate-400 text-md'></Text>
+                                    <Text className='text-slate-400 text-md'>{item.overall_assessment[0]?.model_assessment || "No assessment available"}</Text>
                                     <Text className='text-blue-700 text-sm'>{formatDate(item.createdAt)}</Text>
                                 </View>
-                                <View className='content-end ml-[35] justify-center'>
+                                <View className='content-end ml-auto justify-center'>
                                     <ButtonGlue onPress={() => navigateToMoleDetails(index)} className="bg-blue-600 px-3 py-1 rounded-md">
                                         <ButtonText className="text-white font-medium">
                                             View

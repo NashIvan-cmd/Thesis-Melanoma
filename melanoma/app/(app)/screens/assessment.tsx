@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, 
   Text, 
@@ -8,15 +8,17 @@ import {
   ScrollView,
   SafeAreaView,
   Dimensions,
-  Platform
+  Platform,
+  StatusBar
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAssessmentStore } from '@/services/useAssessmentStore';
-import { router } from 'expo-router';
+import { router, useNavigation } from 'expo-router';
 
 const { width } = Dimensions.get('window');
 
 const Assessment = () => {
+  const navigation = useNavigation();
   const [showReasoning, setShowReasoning] = useState(false);
   const { 
     uri, 
@@ -28,28 +30,60 @@ const Assessment = () => {
     body_part,
     createdAt
   } = useAssessmentStore.getState();
-  // Static data for demonstration
+  
+  // Calculate adjusted risk assessment score based on model assessment
+  const calculateAdjustedRiskScore = (baseScore: number, assessmentType: string) => {
+    let score = baseScore || 0;
+    
+    // Apply score adjustments based on assessment type
+    if (assessmentType === "Possibly Malignant") {
+      score += 55;
+    } else if (assessmentType === "Likely Malignant") {
+      score += 70;
+    }
+    
+    // Cap score at 100 maximum
+    return Math.min(score, 100);
+  };
+  
+  // Static data for demonstration with adjusted risk score
   const assessmentData = {
     imageUrl: uri,
     model_assessment: model_assessment,
-    risk_assessment: risk_assessment,
+    risk_assessment: calculateAdjustedRiskScore(risk_assessment, model_assessment),
     risk_summary: risk_summary,
     body_part: body_part,
     createdAt: createdAt
   };
 
   // Determine styling based on assessment
-  const isBenign = assessmentData.model_assessment === "Benign";
+  const isBenign = assessmentData.model_assessment === "Possibly Benign" || assessmentData.model_assessment === "Benign" || assessmentData.model_assessment === "Likely Benign";
   
+  useEffect(() => {
+      navigation.setOptions({ headerShown: false });
+    }, [navigation]);
+
   // Risk level categorization
-  const getRiskLevel = (score: number) => {
-    if (score < 25) return "Low";
-    if (score < 60) return "Moderate";
-    return "High";
+  const getRiskLevel = (model_assessment: string) => {
+    if (!model_assessment) return "Unknown";
+    if (model_assessment === 'Likely Benign') return "Low Risk";
+    if (model_assessment === 'Possibly Benign') return "Moderate Risk";
+    if (model_assessment === 'Possibly Malignant') return "High Risk";
+    if (model_assessment === 'Likely Malignant') return "Very High Risk";
+    if (model_assessment === 'Benign') return "Low Risk";
+    return "Unknown Risk";
   };
   
-  const formatDate = (date: Date | string) => {
-    if (!(date instanceof Date)) return;
+  const formatDate = (date: Date) => {
+    if (!date) return "";
+    if (!(date instanceof Date)) {
+      // Try to convert string to Date
+      try {
+        date = new Date(date);
+      } catch (e) {
+        return "";
+      }
+    }
     return date.toLocaleDateString('en-US', {
       year: 'numeric', 
       month: 'short', 
@@ -58,25 +92,38 @@ const Assessment = () => {
   };
 
   const handleNavigateToPhoto = () => {
-    router.navigate("/(app)/(tabs)/(photo)")
+    router.push("/(app)/(tabs)/(photo)");
   }
 
   return (
-    <SafeAreaView style={styles.container} className='p-2'>
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="dark-content" />
+      
+      {/* Header with back button */}
+      <View style={styles.header}>
+        <View style={styles.headerContent}>
+          {/* <TouchableOpacity 
+            style={styles.backButton}
+            onPress={handleNavigateToPhoto}
+            activeOpacity={0.7}
+          >
+            <Feather name="arrow-left" size={22} color="#1F2937" />
+          </TouchableOpacity> */}
+          <View style={styles.headerTextContainer}>
+            <Text style={styles.headerTitle}>Mole Assessment</Text>
+            <Text style={styles.headerSubtitle}>
+              {formatDate(assessmentData.createdAt as Date)} • {assessmentData.body_part || "Unspecified"}
+            </Text>
+          </View>
+        </View>
+      </View>
+      
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text style={styles.headerTitle}>Mole Assessment</Text>
-          <Text style={styles.headerSubtitle}>
-            {formatDate(assessmentData.createdAt)} • {assessmentData.body_part}
-          </Text>
-        </View>
-        
-        {/* Image Section - 40% of screen height */}
+        {/* Image Section */}
         <View style={styles.imageContainer}>
           <Image 
             source={{ uri: assessmentData.imageUrl }} 
@@ -85,18 +132,18 @@ const Assessment = () => {
           />
         </View>
         
-        {/* Assessment Box */}
+        {/* Assessment Box - Fixed for smaller screens */}
         <View style={[
           styles.assessmentBox, 
           { backgroundColor: isBenign ? '#DCFCE7' : '#FEE2E2' }
         ]}>
           <View style={styles.assessmentContent}>
-            <View>
+            <View style={styles.assessmentLeftColumn}>
               <Text style={[
                 styles.assessmentResult, 
                 { color: isBenign ? '#15803D' : '#B91C1C' }
               ]}>
-                {assessmentData.model_assessment}
+                {assessmentData.model_assessment || "Unknown"}
               </Text>
               <Text style={styles.assessmentLabel}>AI Assessment</Text>
             </View>
@@ -107,8 +154,8 @@ const Assessment = () => {
               ]}>
                 {assessmentData.risk_assessment}%
               </Text>
-              <Text style={styles.assessmentLabel}>
-                Risk Score • {getRiskLevel(assessmentData.risk_assessment)}
+              <Text style={styles.assessmentLabel} numberOfLines={2}>
+                Risk Score • {getRiskLevel(assessmentData.model_assessment)}
               </Text>
             </View>
           </View>
@@ -131,7 +178,7 @@ const Assessment = () => {
           
           {showReasoning && (
             <View style={styles.reasoningContent}>
-              <Text style={styles.reasoningText}>{assessmentData.risk_summary}</Text>
+              <Text style={styles.reasoningText}>{assessmentData.risk_summary || "No reasoning available."}</Text>
             </View>
           )}
         </View>
@@ -148,7 +195,12 @@ const Assessment = () => {
           </Text>
         </View>
         
-        {/* Action Button */}
+        {/* Spacing to ensure content isn't hidden behind fixed button on small screens */}
+        <View style={styles.bottomPadding} />
+      </ScrollView>
+      
+      {/* Fixed Action Button at bottom */}
+      <View style={styles.fixedButtonContainer}>
         <TouchableOpacity 
           style={styles.actionButton}
           activeOpacity={0.8}
@@ -157,7 +209,7 @@ const Assessment = () => {
           <Text style={styles.actionButtonText}>Back to Main Screen</Text>
           <Feather name="arrow-right" size={18} color="#FFFFFF" />
         </TouchableOpacity>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 };
@@ -166,19 +218,32 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#F9FAFB',
+    paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 0,
   },
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 30,
+    paddingBottom: 100, // Extra padding to account for fixed button
   },
   header: {
     backgroundColor: '#FFFFFF',
-    paddingVertical: 16,
+    paddingVertical: 12,
     paddingHorizontal: 16,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
+    zIndex: 10,
+  },
+  headerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  backButton: {
+    padding: 8,
+    marginRight: 12,
+  },
+  headerTextContainer: {
+    flex: 1,
   },
   headerTitle: {
     fontSize: 20,
@@ -191,8 +256,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   imageContainer: {
-    width: width,
-    height: width * 0.8, // Approx 40% of screen height on most devices
+    width: '100%',
+    height: width * 0.8, // Adjust based on width for consistency
     marginBottom: 16,
     backgroundColor: '#E5E7EB', // Placeholder color
   },
@@ -211,14 +276,20 @@ const styles = StyleSheet.create({
   assessmentContent: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
+  },
+  assessmentLeftColumn: {
+    flex: 1,
+    paddingRight: 8,
   },
   assessmentResult: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
+    flexShrink: 1,
+    flexWrap: 'wrap',
   },
   assessmentScore: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: '700',
     textAlign: 'right',
   },
@@ -228,6 +299,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scoreContainer: {
+    flex: 1,
     alignItems: 'flex-end',
   },
   reasoningContainer: {
@@ -286,8 +358,21 @@ const styles = StyleSheet.create({
     color: '#92400E',
     lineHeight: 20,
   },
+  bottomPadding: {
+    height: 24,
+  },
+  fixedButtonContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(249, 250, 251, 0.9)', // Slight translucent background
+    paddingVertical: 16,
+    paddingHorizontal: 16,
+    borderTopWidth: 1,
+    borderTopColor: '#E5E7EB',
+  },
   actionButton: {
-    marginHorizontal: 16,
     backgroundColor: '#2563EB',
     borderRadius: 12,
     paddingVertical: 16,
@@ -295,7 +380,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: 8,
   },
   actionButtonText: {
     color: '#FFFFFF',

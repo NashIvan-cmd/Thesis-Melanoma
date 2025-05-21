@@ -31,6 +31,7 @@ export const createMoleMetadata = async(
     bodyOrientation: string,
     photoUri: string, 
     mole_owner: string, 
+    bodyPartName: string
 ) => {
     try {
         console.log("Mole owner", mole_owner);        
@@ -54,7 +55,7 @@ export const createMoleMetadata = async(
             data: {
                 x_coordinate,
                 y_coordinate,
-                body_part: "Test",
+                body_part: bodyPartName,
                 body_orientation: bodyOrientation as BodyPart,
                 mole_owner,
                 cloudId: cloudData.signedUrl,
@@ -163,8 +164,26 @@ export const getAllMoleByUserId = async(userId: string): Promise<object[]> => {
     try {
         const result = await prisma.mole_MetaData.findMany({
             where: { mole_owner: userId },
+            select: {
+                id: true,
+                body_orientation: true,
+                body_part: true,
+                mole_owner: true,
+                x_coordinate: true,
+                y_coordinate: true,
+                cloudId: true,
+                publicId: true,
+                createdAt: true,
+                overall_assessment: {
+                    select: {
+                        model_assessment: true,
+                        risk_assessment: true,
+                        risk_summary: true,
+                    }
+                }
+            },
             orderBy: { createdAt: 'desc' }
-        })
+            })
 
         return result
     } catch (error) {
@@ -192,7 +211,25 @@ export const getAllMoleByUserIdWithOrientation = async(userId: string, orientati
 export const getMoleById = async(moleId: string): Promise<object|null> => {
     try {
         const result = await prisma.mole_MetaData.findUnique({
-            where: { id: moleId }
+            where: { id: moleId },
+            select: {
+                id: true,
+                body_orientation: true,
+                body_part: true,
+                mole_owner: true,
+                x_coordinate: true,
+                y_coordinate: true,
+                cloudId: true,
+                publicId: true,
+                createdAt: true,
+                overall_assessment: {
+                    select: {
+                        model_assessment: true,
+                        risk_assessment: true,
+                        risk_summary: true,
+                    }
+                }
+            },
         })
         
         return result
@@ -262,7 +299,7 @@ export const deleteMoleById = async (moleId: string) => {
     }
 }
 
-export const recheckMole = async(moleId: string, photoUri: string, userId: string) => {
+export const recheckMole = async(moleId: string, photoUri: string, userId: string, bodyPartName: string) => {
     try {
         if (!moleId) throw new ValidationError("Mole is missing");
 
@@ -273,7 +310,8 @@ export const recheckMole = async(moleId: string, photoUri: string, userId: strin
             where: { id: moleId },
             data: { 
                 cloudId: cloudData.signedUrl,
-                publicId: cloudData.publicUrl
+                publicId: cloudData.publicUrl,
+                body_part: bodyPartName
              }
         })
 
