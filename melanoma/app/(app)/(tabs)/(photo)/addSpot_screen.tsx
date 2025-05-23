@@ -278,9 +278,13 @@ const AddSpot_screen = () => {
       <View className='flex-1 p-2 pr-5 pl-5 items-center'>
         <BackButton></BackButton>
         <Text>{moles.length} spots</Text>
-        <View className="absolute left-5 top-12 z-50 items-start space-y-3">
+        <View className="absolute left-5 top-20 z-50 items-start space-y-3">
           {/* Recheck button */}
-          <ButtonGlue onPress={handleRecheckRequest} disabled={!currentMole}>
+           <ButtonGlue className="bg-teal-600 rounded-lg" onPress={toggleBodyPostion}>
+            <ButtonText>{bodyPosition}</ButtonText>
+          </ButtonGlue>
+
+          <ButtonGlue onPress={handleRecheckRequest} disabled={!currentMole} className='bg-blue-600 mt-3'>
             <ButtonText>Recheck</ButtonText>
           </ButtonGlue>
 
@@ -313,7 +317,7 @@ const AddSpot_screen = () => {
             </TouchableOpacity>
           </View>
         </View>
-        <View style={styles.coordinatesDisplay}>
+        {/* <View style={styles.coordinatesDisplay}>
           <Text style={styles.coordinatesText}>Relative: x={coordinates.x.toFixed(0)}, y={coordinates.y.toFixed(0)}</Text>
           <Text style={styles.coordinatesText}>Absolute: x={coordinates.absoluteX.toFixed(0)}, y={coordinates.absoluteY.toFixed(0)}</Text>
           <Text 
@@ -321,7 +325,7 @@ const AddSpot_screen = () => {
             Normalized: x={normalizedCoordinates.normalizedX.toFixed(0)}, 
             y={normalizedCoordinates.normalizedY.toFixed(0)}
           </Text>
-        </View>
+        </View> */}
         <Animated.View style={animatedStyle} className='flex-1 w-100 bg-fff items-center'>
           <View className='items-center'>
             <PanGestureHandler onGestureEvent={onPanGestureV2}>
@@ -382,11 +386,7 @@ const AddSpot_screen = () => {
             </PanGestureHandler>
           </View>
         </Animated.View>
-        <View className='mb-1 items-center'>
-          <ButtonGlue className="bg-teal-600 rounded-lg" onPress={toggleBodyPostion}>
-            <ButtonText>{bodyPosition}</ButtonText>
-          </ButtonGlue>
-        </View>
+
         <View className='w-full mt-auto mb-1 rounder-lg'>
           <ButtonGlue className="bg-blue-600 rounded-lg" onPress={handleAddSpotRequest}>
             <ButtonText>

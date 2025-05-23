@@ -61,7 +61,7 @@ export default function SignOut() {
               <Text className="text-teal-600 text-xl">🔬</Text>
             </View>
             <Text className="text-teal-700 font-semibold text-base text-center">
-              FitzPatrick Test
+              FitzPatrick Test & Melanoma History
             </Text>
           </Pressable>
         </View>
