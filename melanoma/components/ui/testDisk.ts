@@ -3,9 +3,9 @@ export const calculateAdjustedScore = (baseScore: number, assessmentType: string
     
     // Apply score adjustments based on assessment type
     if (assessmentType === "Possibly Malignant") {
-      score += 55;
+      score += 20;
     } else if (assessmentType === "Likely Malignant") {
-      score += 70;
+      score += 40;
     }
     
     // Cap score at 100 maximum

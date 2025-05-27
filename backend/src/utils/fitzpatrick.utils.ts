@@ -9,31 +9,31 @@ interface fitzDictionary<T> {
 }
 
 export const familyHistoryDictionary: fitzDictionary<number> = {
-    "Yes, immediate family (parent, sibling)" : 100,
-    "Yes, extended family (aunt, uncle, grandparent)" : 50,
-    "No family history of melanoma": 30
+    "Yes, immediate family (parent, sibling)" : 1,
+    "Yes, extended family (aunt, uncle, grandparent)" : .50,
+    "No family history of melanoma": .30
 } 
 
 export const immuneSystemDictionary: fitzDictionary<number> = {
-    "Yes, due to an autoimmune disease": 100,
-    "Yes, due to immunosuppressive treatment (e.g., chemotherapy, steroids)": 50,
-    "No, I do not have a weakened immune system": 30
+    "Yes, due to an autoimmune disease": 1,
+    "Yes, due to immunosuppressive treatment (e.g., chemotherapy, steroids)": .50,
+    "No, I do not have a weakened immune system": .30
 }
 
 export const skinTypeDictionary: fitzDictionary<number> = {
-    "Type 1": 90,
-    "Type 2": 75,
-    "Type 3": 50,
-    "Type 4": 25,
-    "Type 5 or 6": 10,
+    "Type 1": 1,
+    "Type 2": .95,
+    "Type 3": .85,
+    "Type 4": .75,
+    "Type 5 or 6": .50,
 }
 
 export const sunExposureDictionary: fitzDictionary<number> = {
-    "Less than 1 hour": 10,       // Minimal risk
-    "1-3 hours": 25,              // Low-moderate risk
-    "4-7 hours": 50,              // Moderate risk
-    "8-14 hours": 75,             // High risk
-    "More than 14 hours": 90     // Very high risk
+    "Less than 1 hour": .15,       // Minimal risk
+    "1-3 hours": .25,              // Low-moderate risk
+    "4-7 hours": .50,              // Moderate risk
+    "8-14 hours": .75,             // High risk
+    "More than 14 hours": .90     // Very high risk
 };
 
 
@@ -92,7 +92,7 @@ export const computationalModel = async(userId: string, modelAssessment: number)
 
         // Log the weighted values
         console.log({ probabilityMalignancy });
-        const modelAssessmentWeighted = getWeightedValue(probabilityMalignancy, 0.5);
+        const modelAssessmentWeighted = getWeightedValue(modelAssessment, 0.5);
         const skinTypeWeighted = getWeightedValue(skinTypeValue, 0.2);
         const geneticsWeighted = getWeightedValue(geneticsValue, 0.05);
         const familyHistoryWeighted = getWeightedValue(familyHistoryValue, 0.05);
@@ -101,12 +101,12 @@ export const computationalModel = async(userId: string, modelAssessment: number)
         console.log("✅ Weighted Values:");
         console.log({ skinTypeWeighted, geneticsWeighted, familyHistoryWeighted, sunExposureWeighted, modelAssessmentWeighted });
 
-        const overallValue = modelAssessmentWeighted + skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
+        const weightedSum = modelAssessmentWeighted + skinTypeWeighted + geneticsWeighted + familyHistoryWeighted + sunExposureWeighted;
 
-        console.log("🧮 overallValue:", overallValue);
+        console.log("🧮 overallValue:", weightedSum);
 
-
-        const riskScoreAssessment = overallValue / 5; 
+        const normalized = weightedSum * 100;
+        const riskScoreAssessment = normalized; 
 
 
         const nlpResponse = await googleGenAi(stringValueOfProbability, fitzData.skinType, fitzData.averageSunExposure, fitzData.immune_health, fitzData.genetics);

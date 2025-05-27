@@ -38,7 +38,7 @@ const Assessment = () => {
   const assessmentData = {
     imageUrl: uri,
     model_assessment: model_assessment,
-    risk_assessment: calculateAdjustedScore(risk_assessment, model_assessment),
+    risk_assessment: risk_assessment,
     risk_summary: risk_summary,
     body_part: body_part,
     createdAt: createdAt
