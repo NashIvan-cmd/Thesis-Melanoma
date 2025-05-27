@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { useAssessmentStore } from '@/services/useAssessmentStore';
+import { calculateAdjustedScore } from '@/components/ui/testDisk';
 import { router, useNavigation } from 'expo-router';
 
 const { width } = Dimensions.get('window');
@@ -32,25 +33,12 @@ const Assessment = () => {
   } = useAssessmentStore.getState();
   
   // Calculate adjusted risk assessment score based on model assessment
-  // const calculateAdjustedRiskScore = (baseScore: number, assessmentType: string) => {
-  //   let score = baseScore || 0;
-    
-  //   // Apply score adjustments based on assessment type
-  //   if (assessmentType === "Possibly Malignant") {
-  //     score += 55;
-  //   } else if (assessmentType === "Likely Malignant") {
-  //     score += 70;
-  //   }
-    
-  //   // Cap score at 100 maximum
-  //   return Math.min(score, 100);
-  // };
   
   // Static data for demonstration with adjusted risk score
   const assessmentData = {
     imageUrl: uri,
     model_assessment: model_assessment,
-    risk_assessment: risk_assessment, // calculateAdjustedRiskScore(risk_assessment, model_assessment),
+    risk_assessment: calculateAdjustedScore(risk_assessment, model_assessment),
     risk_summary: risk_summary,
     body_part: body_part,
     createdAt: createdAt

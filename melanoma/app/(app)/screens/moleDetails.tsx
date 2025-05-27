@@ -5,6 +5,7 @@ import { useNavigation } from 'expo-router';
 import { useMoleDataStore } from '@/services/moleStore';
 import BackButton from '@/components/backButton';
 import { MaterialIcons } from '@expo/vector-icons';
+import { calculateAdjustedScore } from '@/components/ui/testDisk';
 import { Input, InputField } from "@/components/ui/input";
 import { API_URL } from '@env';
 import { useSession } from '@/services/authContext';
@@ -143,7 +144,8 @@ const MoleDetails = () => {
   const riskScore = moleData?.overall_assessment?.[0]?.risk_assessment || 0;
   const assessment = moleData?.overall_assessment?.[0]?.model_assessment || "No assessment available";
   const riskSummary = moleData?.overall_assessment?.[0]?.risk_summary || "No details available";
-  
+
+  const displayRiskScore = calculateAdjustedScore(riskScore, assessment);
   // Format date for display
   const formattedDate = moleData ? new Date(moleData.createdAt).toLocaleDateString('en-US', {
     year: 'numeric',
@@ -222,12 +224,12 @@ const MoleDetails = () => {
               <View className="mb-4 items-center">
                 <Text className="text-base font-medium mb-2">Risk Assessment Score</Text>
                 <View className="w-20 h-20 rounded-full items-center justify-center" style={{
-                  backgroundColor: `${getRiskColor(riskScore)}20`,
+                  backgroundColor: `${getRiskColor(displayRiskScore)}20`,
                   borderWidth: 2,
-                  borderColor: getRiskColor(riskScore)
+                  borderColor: getRiskColor(displayRiskScore)
                 }}>
-                  <Text className="text-xl font-bold" style={{ color: getRiskColor(riskScore) }}>
-                    {riskScore.toFixed(1)}
+                  <Text className="text-xl font-bold" style={{ color: getRiskColor(displayRiskScore) }}>
+                    {displayRiskScore.toFixed(1)}
                   </Text>
                 </View>
               </View>
