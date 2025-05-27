@@ -234,7 +234,7 @@ const MoleDetails = () => {
               
               {/* Assessment */}
               <View className="w-full bg-gray-50 rounded-lg p-4 mb-4">
-                <Text className="font-medium mb-1">Assessment</Text>
+                <Text className="font-medium mb-1">Artifical Intelligence Assessment</Text>
                 <Text>{assessment}</Text>
               </View>
               

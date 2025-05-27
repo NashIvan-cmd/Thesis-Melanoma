@@ -25,7 +25,7 @@ export async function googleGenAi(stringValueOfModelAssessment: string, skinType
         {
           text:
            `You are given a main melanoma risk assessment result: **${stringValueOfModelAssessment}**.
-          Explain how this primary condition relates to the user's individual risk of melanoma.
+          Explain how this primary condition relates to the user's individual risk of melanoma this is a model prediction that ranges 0-1 that is times into 100.
 
           Use the following subparameters to support your explanation **only if they are relevant** to the main condition:
           1. **Skin Type** (${skinType}) — Reflects the user's Fitzpatrick classification. Consider how this affects sensitivity to UV damage and melanoma likelihood.

@@ -116,7 +116,7 @@ export const computationalModel = async(userId: string, modelAssessment: number)
         const data = {
             riskAssessment: riskScoreAssessment,
             nlpResponse,
-            stringValueOfProbability
+            stringValueOfProbability: probabilityMalignancy.toString()
         }
 
         return data

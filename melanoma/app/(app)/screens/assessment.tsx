@@ -45,7 +45,7 @@ const Assessment = () => {
   };
 
   // Determine styling based on assessment
-  const isBenign = assessmentData.model_assessment === "Possibly Benign" || assessmentData.model_assessment === "Benign" || assessmentData.model_assessment === "Likely Benign";
+  const isBenign = Number(assessmentData.model_assessment) > 60 ? true : false;
   
   useEffect(() => {
       navigation.setOptions({ headerShown: false });
