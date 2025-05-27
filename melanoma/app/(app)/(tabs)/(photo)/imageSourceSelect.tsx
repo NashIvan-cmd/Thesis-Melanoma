@@ -19,6 +19,7 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import { useAssessmentStore } from '@/services/useAssessmentStore';
 import { Progress, ProgressFilledTrack } from "@/components/ui/progress";
 import { useRecheckMoleStore } from '@/services/useRecheckStore';
+import { Alert } from 'react-native';
 
 import { I_Assessment } from '@/api/moleData';
 
@@ -113,29 +114,40 @@ const ImageSourceSelector = () => {
   };
 
   const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ['images'],
+    allowsEditing: true,
+    aspect: [1, 1], // Square aspect ratio
+    quality: 1,
+    // Set minimum dimensions for editing
+    allowsMultipleSelection: false,
+    selectionLimit: 1,
+  });
 
-    if (!result.canceled && result.assets && result.assets[0].uri) {
-      const uri = result.assets[0].uri;
-
-      const manipulatedImage = await ImageManipulator.manipulateAsync(
-         uri,
-        [{ resize: { width: 300, height: 300 } }],
-         { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+  if (!result.canceled && result.assets && result.assets[0]) {
+    const asset = result.assets[0];
+    const uri = asset.uri;
+    
+    // Check if the selected/cropped area meets minimum requirements
+    if (asset.width < 300 || asset.height < 300) {
+      Alert.alert(
+        'Image Too Small', 
+        'Please select an image that is at least 300x300 pixels.',
+        [{ text: 'OK' }]
       );
-
-      console.log(uri);
-      const convertedUri = await convertToBase64(manipulatedImage.uri);
-      setImageData(convertedUri);
-    } else {
-      console.error('Image picker failed or user cancelled.');
+      return;
     }
-  };
+
+    const manipulatedImage = await ImageManipulator.manipulateAsync(
+      uri,
+      [{ resize: { width: 300, height: 300 } }],
+      { compress: 1, format: ImageManipulator.SaveFormat.JPEG }
+    );
+
+    const convertedUri = await convertToBase64(manipulatedImage.uri);
+    setImageData(convertedUri);
+  }
+};
 
   const processImageRequest = async() => {
     // Validate that body part name is provided

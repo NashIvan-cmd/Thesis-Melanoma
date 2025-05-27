@@ -49,7 +49,7 @@ export default function Index() {
           console.log({ data });
   
           console.log(data);
-          if (data || data.record) {
+          if (data.record) {
             setFitzpatrickCompleted(true);
           } else {
             setFitzpatrickCompleted(false);

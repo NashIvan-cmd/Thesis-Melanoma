@@ -32,25 +32,25 @@ const Assessment = () => {
   } = useAssessmentStore.getState();
   
   // Calculate adjusted risk assessment score based on model assessment
-  const calculateAdjustedRiskScore = (baseScore: number, assessmentType: string) => {
-    let score = baseScore || 0;
+  // const calculateAdjustedRiskScore = (baseScore: number, assessmentType: string) => {
+  //   let score = baseScore || 0;
     
-    // Apply score adjustments based on assessment type
-    if (assessmentType === "Possibly Malignant") {
-      score += 55;
-    } else if (assessmentType === "Likely Malignant") {
-      score += 70;
-    }
+  //   // Apply score adjustments based on assessment type
+  //   if (assessmentType === "Possibly Malignant") {
+  //     score += 55;
+  //   } else if (assessmentType === "Likely Malignant") {
+  //     score += 70;
+  //   }
     
-    // Cap score at 100 maximum
-    return Math.min(score, 100);
-  };
+  //   // Cap score at 100 maximum
+  //   return Math.min(score, 100);
+  // };
   
   // Static data for demonstration with adjusted risk score
   const assessmentData = {
     imageUrl: uri,
     model_assessment: model_assessment,
-    risk_assessment: calculateAdjustedRiskScore(risk_assessment, model_assessment),
+    risk_assessment: risk_assessment, // calculateAdjustedRiskScore(risk_assessment, model_assessment),
     risk_summary: risk_summary,
     body_part: body_part,
     createdAt: createdAt
@@ -134,32 +134,49 @@ const Assessment = () => {
         
         {/* Assessment Box - Fixed for smaller screens */}
         <View style={[
-          styles.assessmentBox, 
-          { backgroundColor: isBenign ? '#DCFCE7' : '#FEE2E2' }
-        ]}>
-          <View style={styles.assessmentContent}>
-            <View style={styles.assessmentLeftColumn}>
-              <Text style={[
-                styles.assessmentResult, 
-                { color: isBenign ? '#15803D' : '#B91C1C' }
-              ]}>
-                {assessmentData.model_assessment || "Unknown"}
-              </Text>
-              <Text style={styles.assessmentLabel}>AI Assessment</Text>
-            </View>
-            <View style={styles.scoreContainer}>
-              <Text style={[
-                styles.assessmentScore, 
-                { color: isBenign ? '#15803D' : '#B91C1C' }
-              ]}>
-                {assessmentData.risk_assessment}%
-              </Text>
-              <Text style={styles.assessmentLabel} numberOfLines={2}>
-                Risk Score • {getRiskLevel(assessmentData.model_assessment)}
-              </Text>
-            </View>
-          </View>
-        </View>
+  styles.assessmentBox, 
+  { backgroundColor: isBenign ? '#DCFCE7' : '#FEE2E2' }
+]}>
+  {/* AI Assessment Section */}
+  <View style={styles.assessmentSection}>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>AI Analysis</Text>
+      <Text style={styles.sectionSubtitle}>Machine Learning Model</Text>
+    </View>
+    <Text style={[
+      styles.assessmentResult, 
+      { color: isBenign ? '#15803D' : '#B91C1C' }
+    ]}>
+      {assessmentData.model_assessment || "Unknown"}
+    </Text>
+  </View>
+
+  {/* Divider */}
+  <View style={styles.assessmentDivider} />
+
+  {/* Risk Score Section */}
+  <View style={styles.assessmentSection}>
+    <View style={styles.sectionHeader}>
+      <Text style={styles.sectionTitle}>Risk Assessment</Text>
+      <Text style={styles.sectionSubtitle}>Dermatologist-Verified Model</Text>
+    </View>
+    <View style={styles.riskScoreRow}>
+      <Text style={[
+        styles.assessmentScore, 
+        { color: isBenign ? '#15803D' : '#B91C1C' }
+      ]}>
+        {assessmentData.risk_assessment}%
+      </Text>
+      <Text style={[
+        styles.riskLevel,
+        { color: isBenign ? '#15803D' : '#B91C1C' }
+      ]}>
+        {getRiskLevel(assessmentData.model_assessment)}
+      </Text>
+    </View>
+  </View>
+</View>
+
         
         {/* Reasoning Section (Expandable) */}
         <View style={styles.reasoningContainer}>
@@ -282,25 +299,70 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingRight: 8,
   },
-  assessmentResult: {
-    fontSize: 22,
-    fontWeight: '700',
-    flexShrink: 1,
-    flexWrap: 'wrap',
-  },
-  assessmentScore: {
-    fontSize: 22,
-    fontWeight: '700',
-    textAlign: 'right',
-  },
+  // assessmentResult: {
+  //   fontSize: 22,
+  //   fontWeight: '700',
+  //   flexShrink: 1,
+  //   flexWrap: 'wrap',
+  // },
+  // assessmentScore: {
+  //   fontSize: 22,
+  //   fontWeight: '700',
+  //   textAlign: 'right',
+  // },
   assessmentLabel: {
     fontSize: 14,
     color: '#4B5563',
     marginTop: 2,
   },
-  scoreContainer: {
+  assessmentSection: {
     flex: 1,
-    alignItems: 'flex-end',
+    paddingVertical: 8,
+  },
+  
+  sectionHeader: {
+    marginBottom: 8,
+  },
+  
+  sectionTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#374151',
+    marginBottom: 2,
+  },
+  
+  sectionSubtitle: {
+    fontSize: 11,
+    color: '#6B7280',
+    fontStyle: 'italic',
+  },
+  
+  assessmentDivider: {
+    width: 1,
+    backgroundColor: '#D1D5DB',
+    marginHorizontal: 16,
+  },
+  
+  riskScoreRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    gap: 8,
+  },
+  
+  riskLevel: {
+    fontSize: 12,
+    fontWeight: '500',
+  },
+  
+  // Update existing styles:
+  assessmentResult: {
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  
+  assessmentScore: {
+    fontSize: 24,
+    fontWeight: 'bold',
   },
   reasoningContainer: {
     marginHorizontal: 16,

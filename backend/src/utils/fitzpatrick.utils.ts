@@ -106,7 +106,9 @@ export const computationalModel = async(userId: string, modelAssessment: number)
         console.log("🧮 overallValue:", overallValue);
 
 
-        const riskScoreAssessment = overallValue / 5; 
+        const mean = overallValue / 5; 
+
+        const riskScoreAssessment = mean * 100;
 
 
         const nlpResponse = await googleGenAi(stringValueOfProbability, fitzData.skinType, fitzData.averageSunExposure, fitzData.immune_health, fitzData.genetics);

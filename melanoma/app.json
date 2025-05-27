@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "icon": "./assets/images/melanoma_logo_2.png",
     "splash": {
-      "image": "./assets/images/splashscreen_logo.png",
+      "image": "./assets/images/splash.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,7 +19,7 @@
     },
     "android": {
       "adaptiveIcon": {
-        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "foregroundImage": "./assets/images/melanoma_logo_2.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [
@@ -38,6 +38,7 @@
       [
         "expo-splash-screen",
         {
+          "image": "./assets/images/splashscreen_logo.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }

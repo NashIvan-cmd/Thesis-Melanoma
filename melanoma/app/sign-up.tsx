@@ -26,6 +26,7 @@ const Signup = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMessage, setModalMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [codeRequested, setCodeRequested] = useState(false);
 
   const handleSubmitRequest = async() => {
@@ -102,7 +103,7 @@ const Signup = () => {
     }
     
     try {
-      setIsLoading(true);
+      setIsLoadingEmail(true);
       const response = await fetch(`${API_URL}/v1/code/account`, {
         method: "POST",
         headers: {
@@ -114,7 +115,7 @@ const Signup = () => {
       });
 
       const data = await response.json();
-      setIsLoading(false);
+      setIsLoadingEmail(false);
       console.log('Verification code', data.code);
 
       setVerificationCode(data.code);
@@ -122,7 +123,7 @@ const Signup = () => {
       setModalMessage('Verification code sent to your email');
       setIsModalOpen(true);
     } catch (error) {
-      setIsLoading(false);
+      setIsLoadingEmail(false);
       setModalMessage("Failed to generate verification code");
       setIsModalOpen(true);
       console.error("Error @ handle generate code", error);
@@ -173,11 +174,11 @@ const Signup = () => {
               {email != '' && (
                 <ButtonGlue 
                   onPress={handleGenerateCodeRequest}
-                  disabled={isLoading}
+                  disabled={isLoadingEmail}
                   className={`rounded-lg py-3 h-12 w-full ${codeRequested ? 'bg-green-500' : 'bg-blue-500'}`}
                 >
                   <ButtonText className="font-medium text-white">
-                    {isLoading ? 'Sending...' : codeRequested ? 'Resend Code' : 'Generate Verification Code'}
+                    {isLoadingEmail ? 'Sending...' : codeRequested ? 'Resend Code' : 'Generate Verification Code'}
                   </ButtonText>
                 </ButtonGlue>
               )}

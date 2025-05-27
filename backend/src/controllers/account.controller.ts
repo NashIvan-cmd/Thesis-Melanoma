@@ -245,6 +245,7 @@ export const changePasswordController = async(req: Request, res: Response, next:
 }
 
 // @ComputerKing19
+// This is for reset password and forgot password
 export const resetPasswordController = async(req: Request, res: Response, next: NextFunction) => {
     console.log(req.body);
     try {

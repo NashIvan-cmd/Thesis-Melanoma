@@ -19,7 +19,10 @@ router.post('/v1/new/account', createAccount);
 router.post('/v1/code/account', generateCode);
 router.post('/v1/agreement/account', validateToken, agreementToTerms);
 router.post('/v1/password/change', changePasswordController);
+
+// This is the one I use where I verify details
 router.post('/v1/password/verify/details/reset', requestPasswordReset as any);
+
 router.post('/v1/password/reset', resetPasswordController);
 // router.post('/v1/reset/password', requestPasswordReset);
 
