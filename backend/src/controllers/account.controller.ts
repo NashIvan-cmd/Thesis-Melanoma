@@ -36,6 +36,30 @@ export const createAccount = async(req: Request, res: Response, next: NextFuncti
 
     try {
 
+        const existingUsername = await prisma.user_Account.findFirst({
+        where: { username: username }
+        });
+
+        if (existingUsername) {
+            res.status(400).json({
+            success: false,
+            message: 'username already exist'
+            });
+            return;
+        }
+
+        const existingEmail = await prisma.user_Account.findFirst({
+        where: { email: email }
+        });
+
+        if (existingEmail) {
+            res.status(400).json({
+            success: false,
+            message: 'Email already exist'
+            });
+            return;
+        }
+
         const hashedPassword = hashPassword(password);
         // Up to this point we can say that all of the provided credentials is correct
         if (!hashedPassword) {
@@ -319,6 +343,13 @@ export const deleteAccountController = async(req: Request, res: Response, next: 
             // Continue with other operations
         }
         
+        try {
+            await prisma.user_FitzPatrick.delete({
+                where: ({ user_account_foreignkey: accountId })
+            })
+        } catch (error) {
+            
+        }
         // Delete the account itself last
         try {
             await prisma.user_Account.delete({ 
