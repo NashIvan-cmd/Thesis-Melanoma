@@ -60,3 +60,37 @@ export function generateSimpleVerificationCode(length = 6) {
   }
   return code;
 }
+
+export const sendCredentialsToEmail = async(email: string, username: string) => {
+    const info = await transporter.sendMail({
+        from: '"MelanomaTracker Support" <ramosnash0519@gmail.com>', // friendlier "from" name
+        to: email,
+        subject: 'Verify your MelanomaTracker account',
+        text: `Hello,
+
+Thanks for signing up with MelanomaTracker!
+
+You can use this credentials to log in.
+
+If you did not create any account, feel free to ignore this email.
+
+Thank you,
+The MelanomaTracker Team`,
+        html: `
+            <div style="font-family: Arial, sans-serif; line-height: 1.5; color: #333;">
+                <h2>Welcome to MelanomaTracker!</h2>
+                <p>Your email has been verified</p>
+                <p style="font-size: 24px; font-weight: bold; color: #007BFF;">Use this username: ${username}</p>
+                <br/>
+                <p>If you didn’t request this, you can safely ignore this email.</p>
+                <br/>
+                <p style="font-size: 12px; color: #777;">
+                  You received this email because you registered on MelanomaTracker.
+                </p>
+            </div>
+        `
+    });
+
+    console.log('Email sent:', info.messageId);
+    return true;
+};

@@ -75,7 +75,7 @@ const Signup = () => {
       setIsLoading(false);
 
       if (data.success == true) {
-        setModalMessage("Account created successfully");
+        setModalMessage("Account created successfully, Check your email for credentials");
         setIsModalOpen(true);
         setUsername('');
         setConfirmPassword('');

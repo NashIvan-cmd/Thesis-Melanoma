@@ -44,6 +44,8 @@ interface FitzpatrickState {
   weeklyHoursSun: string,
   setWeeklyHoursSun: (value: string) => void;
 
+  reset: () => void;
+
 }
 
 export const useFitzpatrickStore = create<FitzpatrickState>((set) => ({
@@ -94,5 +96,24 @@ export const useFitzpatrickStore = create<FitzpatrickState>((set) => ({
   setGender: (value: string) => set({ gender: value }),
 
   weeklyHoursSun: '',
-  setWeeklyHoursSun: (value: string) => set({ weeklyHoursSun: value })
+  setWeeklyHoursSun: (value: string) => set({ weeklyHoursSun: value }),
+
+  reset: () =>
+  set({
+    eyeColor: '',
+    hairColor: '',
+    skinColor: '',
+    freckles: '',
+    sunBurnReaction: '',
+    tanReaction: '',
+    brownAfterSun: '',
+    faceReactionToSun: '',
+    lastSunExposure: '',
+    faceSunExposure: '',
+    familyHistoryMelanoma: '',
+    immuneHealth: '',
+    age: '',
+    gender: '',
+    weeklyHoursSun: ''
+  }),
 }));

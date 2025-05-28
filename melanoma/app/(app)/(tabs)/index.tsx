@@ -161,9 +161,9 @@ export default function Index() {
               {!fitzpatrickCompleted && (
                 <Text 
                 className="text-blue-600 ml-2"
-                onPress={() => console.log("Navigate to fitzpatrick screen")}
+                onPress={() => navigateToSettings()}
                 >
-                  Complete
+                 {(' ')} Settings
                 </Text>
               )}
             </Text>

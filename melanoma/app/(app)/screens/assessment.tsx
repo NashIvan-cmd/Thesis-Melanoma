@@ -45,20 +45,25 @@ const Assessment = () => {
   };
 
   // Determine styling based on assessment
-  const isBenign = Number(assessmentData.model_assessment) > 60 ? true : false;
+  const numberModelAssessment = Number(assessmentData.model_assessment).toFixed(2);
+  console.log({ numberModelAssessment });
+  const isBenign = Number(assessmentData.model_assessment) < 60 ? true : false;
   
   useEffect(() => {
       navigation.setOptions({ headerShown: false });
     }, [navigation]);
 
   // Risk level categorization
-  const getRiskLevel = (model_assessment: string) => {
-    if (!model_assessment) return "Unknown";
-    if (model_assessment === 'Likely Benign') return "Low Risk";
-    if (model_assessment === 'Possibly Benign') return "Moderate Risk";
-    if (model_assessment === 'Possibly Malignant') return "High Risk";
-    if (model_assessment === 'Likely Malignant') return "Very High Risk";
-    if (model_assessment === 'Benign') return "Low Risk";
+  const getRiskLevel = (numberModelAssessment: number) => {
+    if (numberModelAssessment <= 30) {
+      return "Low Risk of Melanoma";
+    } else if (numberModelAssessment > 30 && numberModelAssessment < 60) {
+      return "Moderate Risk of Melanoma";
+    } else if (numberModelAssessment >= 60 && numberModelAssessment < 80) {
+      return "High Risk of Melanoma";
+    } else if (numberModelAssessment >= 80) {
+      return "Very High Risk of Melanoma";
+    }
     return "Unknown Risk";
   };
   
@@ -120,51 +125,53 @@ const Assessment = () => {
           />
         </View>
         
-        {/* Assessment Box - Fixed for smaller screens */}
+       {/* Assessment Box - Fixed structure */}
         <View style={[
-  styles.assessmentBox, 
-  { backgroundColor: isBenign ? '#DCFCE7' : '#FEE2E2' }
-]}>
-  {/* AI Assessment Section */}
-  <View style={styles.assessmentSection}>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>AI Analysis</Text>
-      <Text style={styles.sectionSubtitle}>Machine Learning Model</Text>
-    </View>
-    <Text style={[
-      styles.assessmentResult, 
-      { color: isBenign ? '#15803D' : '#B91C1C' }
-    ]}>
-      {assessmentData.model_assessment || "Unknown"}
-    </Text>
-  </View>
+          styles.assessmentBox, 
+          { backgroundColor: isBenign ? '#DCFCE7' : '#FEE2E2' }
+        ]}>
+          {/* Risk Score Section */}
+          <View style={styles.assessmentSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>Risk Assessment</Text>
+              <Text style={styles.sectionSubtitle}>Dermatologist-Verified Model</Text>
+            </View>
+            <View style={styles.riskScoreRow}>
+              <Text style={[
+                styles.assessmentScore, 
+                { color: isBenign ? '#15803D' : '#B91C1C' }
+              ]}>
+                {assessmentData.risk_assessment}%
+              </Text>
+              <Text style={[
+                styles.riskLevel,
+                { color: isBenign ? '#15803D' : '#B91C1C' }
+              ]}>
+                {getRiskLevel(assessmentData.risk_assessment)}
+              </Text>
+            </View>
+          </View>
 
-  {/* Divider */}
-  <View style={styles.assessmentDivider} />
+          {/* Divider */}
+          <View style={styles.assessmentDivider} />
 
-  {/* Risk Score Section */}
-  <View style={styles.assessmentSection}>
-    <View style={styles.sectionHeader}>
-      <Text style={styles.sectionTitle}>Risk Assessment</Text>
-      <Text style={styles.sectionSubtitle}>Dermatologist-Verified Model</Text>
-    </View>
-    <View style={styles.riskScoreRow}>
-      <Text style={[
-        styles.assessmentScore, 
-        { color: isBenign ? '#15803D' : '#B91C1C' }
-      ]}>
-        {assessmentData.risk_assessment}%
-      </Text>
-      <Text style={[
-        styles.riskLevel,
-        { color: isBenign ? '#15803D' : '#B91C1C' }
-      ]}>
-        {getRiskLevel(assessmentData.model_assessment)}
-      </Text>
-    </View>
-  </View>
-</View>
-
+          {/* AI Assessment Section */}
+          <View style={styles.assessmentSection}>
+            <View style={styles.sectionHeader}>
+              <Text style={styles.sectionTitle}>AI Analysis</Text>
+              <Text style={styles.sectionTitle}>
+                A score below 60% indicates low-moderate risk; above 60% may require further attention.
+              </Text>
+              <Text style={styles.sectionSubtitle}>Machine Learning Model</Text>
+            </View>
+            <Text style={[
+              styles.assessmentResult, 
+              { color: isBenign ? '#15803D' : '#B91C1C' }
+            ]}>
+              {numberModelAssessment || "Unknown"}%
+            </Text>
+          </View>
+        </View>
         
         {/* Reasoning Section (Expandable) */}
         <View style={styles.reasoningContainer}>

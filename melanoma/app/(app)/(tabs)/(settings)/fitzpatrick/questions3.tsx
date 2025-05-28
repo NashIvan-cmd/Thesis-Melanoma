@@ -22,7 +22,8 @@ const Questions3 = () => {
       familyHistoryMelanoma, 
       setFamilyHistoryMelanoma,
       immuneHealth, 
-      setImmuneHealth, 
+      setImmuneHealth,
+      reset
     } = useFitzpatrickStore();
     const { userId, accessToken } = useSession();
   
@@ -41,6 +42,7 @@ const Questions3 = () => {
           router.navigate("/(app)/(tabs)/(settings)")
           setSkinType(data.skinTypeAssessment);
           setShowModal(true);
+          reset();
         }
     }
 

@@ -29,10 +29,10 @@ export const skinTypeDictionary: fitzDictionary<number> = {
 }
 
 export const sunExposureDictionary: fitzDictionary<number> = {
-    "Less than 1 hour": .15,       // Minimal risk
-    "1-3 hours": .25,              // Low-moderate risk
-    "4-7 hours": .50,              // Moderate risk
-    "8-14 hours": .75,             // High risk
+    "Less than 1 hour": .40,       // Minimal risk
+    "1-3 hours": .50,              // Low-moderate risk
+    "4-7 hours": .75,              // Moderate risk
+    "8-14 hours": .85,             // High risk
     "More than 14 hours": .90     // Very high risk
 };
 

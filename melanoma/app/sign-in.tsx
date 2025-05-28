@@ -64,7 +64,7 @@ export default function SignIn() {
                   setError('');
                 }}
                 type="text"
-                placeholder="Username"
+                placeholder="Username or Email"
                 className="p-2"
               />
             </Input>

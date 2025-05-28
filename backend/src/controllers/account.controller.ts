@@ -2,7 +2,7 @@ import { Prisma, PrismaClient } from "@prisma/client";
 import { Request, Response, NextFunction } from "express";
 // import jwt from "jsonwebtoken";
 import { checkUserAgreement, findUser, findUserPassword, changePassword, deleteAccountService } from "../services/account.service";
-import { emailVerificationLogic, generateSimpleVerificationCode, hashPassword } from "../utils/account.utils";
+import { emailVerificationLogic, generateSimpleVerificationCode, hashPassword, sendCredentialsToEmail } from "../utils/account.utils";
 import { accessTokenGenerator, refreshTokenGenerator } from "../middlewares/auth.middleware";
 
 import dotenv from "dotenv";
@@ -60,6 +60,7 @@ export const createAccount = async(req: Request, res: Response, next: NextFuncti
             });
         }
 
+        await sendCredentialsToEmail(result.email, result.username)
         res.status(201).json({
             success: true,
             message: 'Account created successfuly'
