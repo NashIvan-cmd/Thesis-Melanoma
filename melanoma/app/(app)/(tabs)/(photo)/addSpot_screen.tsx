@@ -357,7 +357,7 @@ const AddSpot_screen = () => {
                         left: mole.x_coordinate - 12, 
                         top: mole.y_coordinate,
                         transform: [
-                          { translateX: -10 }
+                          { translateX: -12 }
                         ]
                       }
                     ]}

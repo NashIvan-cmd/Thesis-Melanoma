@@ -18,6 +18,8 @@ import { useSession } from '@/services/authContext';
 import { useImageStore } from '@/services/imageStore';
 import { convertToBase64 } from '@/services/imageManipulation';
 
+
+
 interface IRenderCameraProps {
   x_coordinate: number;
   y_coordinate: number;
@@ -63,20 +65,6 @@ const RenderCamera = ({ x_coordinate, y_coordinate }: IRenderCameraProps) => {
     }
   };
 
-  const pickImage = async () => {
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
-      quality: 1,
-    });
-
-    if (!result.canceled && result.assets && result.assets[0].uri) {
-      setUri(result.assets[0].uri);
-    } else {
-      console.error("Image picker failed or user cancelled.");
-    }
-  };
 
   useEffect(() => {
     let mounted = true;

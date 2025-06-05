@@ -105,6 +105,49 @@ const ImageSourceSelector = () => {
     };
   }, [isAnalyzing]);
 
+  const resizeImage = async(uri: string) => {
+    const result = await ImageManipulator.manipulateAsync(
+        uri,
+        [{ resize: { width: 300, height: 300 } }],
+        { format: ImageManipulator.SaveFormat.PNG }
+    );
+    return result;
+}
+
+ const takeImage = async () => {
+    try {
+        let result = await ImagePicker.launchCameraAsync({
+            mediaTypes: ['images'],
+            allowsEditing: true,
+            aspect: [1, 1],
+            quality: 1,
+        });
+        
+        console.log("Camera Async Result");
+        console.log({ result });
+        
+        if (!result.canceled) {
+            console.log("Processing image..."); // Add this log
+            const uri = result.assets[0].uri;
+            
+            const resizedImage = await resizeImage(uri);
+            console.log({ resizedImage });
+            
+            const based64Uri = await convertToBase64(resizedImage.uri);
+            console.log({ based64Uri });
+            
+            setImageData(based64Uri);
+            console.log("Image processing complete"); // Add this log
+        }
+    } catch (error) {
+        console.error("Error in takeImage:", error);
+    }
+    
+    console.log('Look it should not reset');
+    setShouldResetOnBlur(false);
+    shouldResetRef.current = false;
+};
+
   const takePicture = () => {
     // Prevent reset when navigating to camera - update both state and ref
     console.log('Look it should not reset');
@@ -311,7 +354,7 @@ const ImageSourceSelector = () => {
                   <ButtonText>Please upload for iOS devices</ButtonText>
                 </ButtonGlue>
             ) : (
-                <ButtonGlue size='lg' onPress={takePicture} className="bg-teal-600 w-full">
+                <ButtonGlue size='lg' onPress={takeImage} className="bg-teal-600 w-full">
                   <ButtonText>Take Picture</ButtonText>
                 </ButtonGlue>
             )}

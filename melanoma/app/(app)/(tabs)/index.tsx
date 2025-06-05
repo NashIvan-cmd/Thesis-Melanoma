@@ -141,10 +141,10 @@ export default function Index() {
               App Policy Agreement
               {!policyAgreed && (
                 <Text 
-                className="text-blue-600 ml-2 underline"
+                className="text-blue-600 ml-2"
                 onPress={() => navigateToSettings()}
                 >
-                 {(' ')} Settings
+                 {(' ')}Settings
                 </Text>
               )}
             </Text>

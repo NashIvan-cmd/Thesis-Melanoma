@@ -124,14 +124,16 @@ const Photo = () => {
             const data = await checkUserFitzAndAgreement.json();
 
             console.log(data);
-            if (!data || !data.record) {
+            if (!data.record) {
                 setShowModal(true);
                 return;
             }
 
-            if (!data.agreement) {
+            const agreement = data.agreement;
+            console.log({ agreement });
+            if (data.agreement.policyAgreement == false) {
                 setShowModalV1(true);
-                return
+                return;
             }
 
             router.push('/(app)/(tabs)/(photo)/addSpot_screen'); // Adjust this based on your tab structure
@@ -208,7 +210,7 @@ const Photo = () => {
                 isOpen={showModalV1}
                 onClose={() => setShowModalV1(false)}
                 titleContent="User Agreement"
-                bodyContent="You need to agree to the App policy and terms"
+                bodyContent="Please read and agree to the App policy and terms before using the app core feature"
                 primaryButtonText="Go to Settings"
                 secondaryButtonText="Cancel"
                 primaryButtonAction={() => {

@@ -4,6 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button as ButtonGlue, ButtonText } from '@/components/ui/button';
 import { Input, InputField } from '@/components/ui/input';
+import { Progress, ProgressFilledTrack } from "@/components/ui/progress";
 import { 
   Modal, 
   ModalBackdrop, 
@@ -29,6 +30,45 @@ const Signup = () => {
   const [isLoadingEmail, setIsLoadingEmail] = useState(false);
   const [codeRequested, setCodeRequested] = useState(false);
 
+  // Password strength calculation
+  const calculatePasswordStrength = (password: string) => {
+    let strength = 0;
+    const criteria = {
+      length: password.length >= 8,
+      uppercase: /[A-Z]/.test(password),
+      lowercase: /[a-z]/.test(password),
+      number: /[0-9]/.test(password),
+      special: /[^A-Za-z0-9]/.test(password)
+    };
+
+    if (criteria.length) strength += 20;
+    if (criteria.uppercase) strength += 20;
+    if (criteria.lowercase) strength += 20;
+    if (criteria.number) strength += 20;
+    if (criteria.special) strength += 20;
+
+    return { strength, criteria };
+  };
+
+  const getPasswordStrengthInfo = () => {
+    const { strength, criteria } = calculatePasswordStrength(password);
+    let label = '';
+    let color = '';
+
+    if (strength < 40) {
+      label = 'Weak';
+      color = 'bg-red-500';
+    } else if (strength < 80) {
+      label = 'Medium';
+      color = 'bg-yellow-500';
+    } else {
+      label = 'Strong';
+      color = 'bg-green-500';
+    }
+
+    return { strength, label, color, criteria };
+  };
+
   const handleSubmitRequest = async() => {
     try {
       console.log('Executing handle submit request');
@@ -53,6 +93,14 @@ const Signup = () => {
 
       if (password !== confirmPassword) {
         setModalMessage('Passwords do not match!');
+        setIsModalOpen(true);
+        return;
+      }
+
+      // Check password strength - require strong password
+      const { strength } = calculatePasswordStrength(password);
+      if (strength < 80) {
+        setModalMessage('Password must be Strong! Please ensure it meets all requirements: 8+ characters, uppercase, lowercase, number, and special character.');
         setIsModalOpen(true);
         return;
       }
@@ -135,6 +183,8 @@ const Signup = () => {
   }
   
   const ModalAny = Modal as any;
+  const passwordInfo = getPasswordStrengthInfo();
+
   return ( 
     <SafeAreaView className="flex-1 bg-gray-50">
       <ScrollView className="flex-1">
@@ -207,6 +257,62 @@ const Signup = () => {
                     className="p-2"
                   />
                 </Input>
+                
+                {/* Password Strength Indicator */}
+                {password !== '' && (
+                  <View className="mt-3">
+                    <View className="flex-row items-center justify-between mb-2">
+                      <Text className="text-sm text-gray-600">Password Strength:</Text>
+                      <Text className={`text-sm font-medium ${
+                        passwordInfo.label === 'Strong' ? 'text-green-600' :
+                        passwordInfo.label === 'Medium' ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {passwordInfo.label}
+                      </Text>
+                    </View>
+                    
+                    <Progress value={passwordInfo.strength} size="md" className="mb-3">
+                      <ProgressFilledTrack className={passwordInfo.color} />
+                    </Progress>
+                    
+                    <View className="space-y-1">
+                      <View className="flex-row items-center">
+                        <Text className={`text-sm mr-2 ${passwordInfo.criteria.length ? 'text-green-600' : 'text-red-500'}`}>
+                          {passwordInfo.criteria.length ? '✓' : '✗'}
+                        </Text>
+                        <Text className="text-sm text-gray-600">At least 8 characters</Text>
+                      </View>
+                      
+                      <View className="flex-row items-center">
+                        <Text className={`text-sm mr-2 ${passwordInfo.criteria.uppercase ? 'text-green-600' : 'text-red-500'}`}>
+                          {passwordInfo.criteria.uppercase ? '✓' : '✗'}
+                        </Text>
+                        <Text className="text-sm text-gray-600">One uppercase letter</Text>
+                      </View>
+                      
+                      <View className="flex-row items-center">
+                        <Text className={`text-sm mr-2 ${passwordInfo.criteria.lowercase ? 'text-green-600' : 'text-red-500'}`}>
+                          {passwordInfo.criteria.lowercase ? '✓' : '✗'}
+                        </Text>
+                        <Text className="text-sm text-gray-600">One lowercase letter</Text>
+                      </View>
+                      
+                      <View className="flex-row items-center">
+                        <Text className={`text-sm mr-2 ${passwordInfo.criteria.number ? 'text-green-600' : 'text-red-500'}`}>
+                          {passwordInfo.criteria.number ? '✓' : '✗'}
+                        </Text>
+                        <Text className="text-sm text-gray-600">One number</Text>
+                      </View>
+                      
+                      <View className="flex-row items-center">
+                        <Text className={`text-sm mr-2 ${passwordInfo.criteria.special ? 'text-green-600' : 'text-red-500'}`}>
+                          {passwordInfo.criteria.special ? '✓' : '✗'}
+                        </Text>
+                        <Text className="text-sm text-gray-600">One special character</Text>
+                      </View>
+                    </View>
+                  </View>
+                )}
               </View>
 
               <View>

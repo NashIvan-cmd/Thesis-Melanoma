@@ -147,7 +147,10 @@ export default function AppPolicy() {
           bodyContent = "Thank you for agreeing to our policy terms."
           primaryButtonText="Melanoma test"
           secondaryButtonText="Close"
-          primaryButtonAction={() => {router.navigate("/(app)/(tabs)/(photo)")}}
+          primaryButtonAction={() => {
+            setShowModal(false);
+            router.navigate("/(app)/(tabs)/(photo)")
+          }}
           secondaryButtonAction={() => setShowModal(false)}
         />
 
