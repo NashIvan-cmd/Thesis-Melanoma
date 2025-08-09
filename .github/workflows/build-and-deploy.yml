@@ -2,14 +2,17 @@ name: Build and Deploy Expo App
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 
 jobs:
   build:
     name: Build and Deploy
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./melanoma
     
     steps:
       - name: Checkout repository
@@ -19,23 +22,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '18'
-          cache: 'npm'
 
       - name: Setup Expo CLI
         uses: expo/expo-github-action@v8
         with:
           expo-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          
+      - name: Verify EAS CLI
+        run: |
+          npx eas --version
+          ls -la
+          cat package.json | grep name
 
       - name: Install dependencies
         run: npm install
 
       - name: Build Android APK
-        run: eas build --platform android --profile preview --non-interactive --wait
+        run: npx eas build --platform android --profile preview --non-interactive --wait
 
       - name: Get build URL
         run: |
-          BUILD_URL=$(eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
+          BUILD_URL=$(npx eas build:list --platform android --limit 1 --json | jq -r '.[0].artifacts.buildUrl')
           echo "Build URL: $BUILD_URL"
           echo "BUILD_URL=$BUILD_URL" >> $GITHUB_ENV
 
