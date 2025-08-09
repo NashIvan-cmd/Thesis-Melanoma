@@ -14,6 +14,7 @@ import BackButton from '@/components/backButton';
 
 import { useFitzpatrickStore } from '@/services/fitzPatrickStore';
 import { fitzpatrickData } from '@/api/fitzpatrick';
+import { accessTokenInterceptor } from '@/interceptor/accessToken.interceptor';
 
 const Questions3 = () => {
   const { 
@@ -25,7 +26,7 @@ const Questions3 = () => {
       setImmuneHealth,
       reset
     } = useFitzpatrickStore();
-    const { userId, accessToken } = useSession();
+    const { userId, getCurrentToken } = useSession();
   
     const [notComplete, setNotComplete] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -33,11 +34,14 @@ const Questions3 = () => {
     const [skinType, setSkinType] = useState('');
     
     const calculateSkinType = async() => {
+
+        const accessToken = await getCurrentToken();
         if (!userId || !accessToken) return;
-        const result = await fitzpatrickData(userId, accessToken);
+        const result = await fitzpatrickData(userId, accessToken, "FakeSession");
         
         const data = await result?.json();
 
+        accessTokenInterceptor(data);
         if (data) {
           router.navigate("/(app)/(tabs)/(settings)")
           setSkinType(data.skinTypeAssessment);
@@ -118,13 +122,15 @@ const Questions3 = () => {
       </Card>
 
       <View style={{ flexDirection: 'row', gap: 8, marginTop: 5 }}>
-        <ButtonGlue isDisabled={notComplete} style={{ flex: 1 }} onPress={calculateSkinType}>
+        <ButtonGlue className="border border-gray-500 text-gray-500 px-4 py-2 rounded-md"
+           style={{ flex: 1 }} onPress={handleCancelRequest}>
+          <ButtonText>Cancel</ButtonText>
+        </ButtonGlue>
+
+        <ButtonGlue className='bg-blue-600' isDisabled={notComplete} style={{ flex: 1 }} onPress={calculateSkinType}>
           <ButtonText>Calculate</ButtonText>
         </ButtonGlue>
 
-        <ButtonGlue style={{ flex: 1 }} onPress={handleCancelRequest}>
-          <ButtonText>Cancel</ButtonText>
-        </ButtonGlue>
       </View>
 
       

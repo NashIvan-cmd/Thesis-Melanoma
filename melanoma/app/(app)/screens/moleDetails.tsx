@@ -9,6 +9,8 @@ import { Input, InputField } from "@/components/ui/input";
 import { API_URL } from '@env';
 import { useSession } from '@/services/authContext';
 
+import { Image } from 'expo-image';
+
 // Define the types based on what's returned from your API
 type AssessmentData = {
   model_assessment: string;
@@ -88,8 +90,8 @@ const MoleDetails = () => {
   );
 
   const getRiskColor = (score: number) => {
-    if (score < 50) return "#4CAF50"; // Green for low risk
-    if (score < 40 && score > 80) return "#FFC107"; // Yellow/amber for medium risk
+    if (score < 60) return "#4CAF50"; // Green for low risk
+    if (score > 60 && score < 80) return "#FFC107"; // Yellow/amber for medium risk
     return "#F44336"; // Red for high risk
   };
 
@@ -143,6 +145,7 @@ const MoleDetails = () => {
   const riskScore = moleData?.overall_assessment?.[0]?.risk_assessment || 0;
   const assessment = moleData?.overall_assessment?.[0]?.model_assessment || "No assessment available";
   const riskSummary = moleData?.overall_assessment?.[0]?.risk_summary || "No details available";
+  const cloudId = moleData?.cloudId || "No Image Available";
   
   // Format date for display
   const formattedDate = moleData ? new Date(moleData.createdAt).toLocaleDateString('en-US', {
@@ -164,9 +167,13 @@ const MoleDetails = () => {
           ) : (
             <View className="items-center">
               {/* Image placeholder - taking about 25% of screen height */}
-              <View className="w-full aspect-square max-h-48 bg-gray-100 rounded-lg items-center justify-center mb-4">
-                <Text className="text-gray-500">Mole Image</Text>
+              <View className="w-full aspect-square max-h-48 bg-gray-100 rounded-lg overflow-hidden mb-4 items-center justify-center">
+                <Image
+                  source={cloudId}
+                  style={{ height: '100%', width: '100%', resizeMode: 'cover' }}
+                />
               </View>
+
               
               {/* Disclaimer */}
               <View className="w-full bg-amber-50 border border-amber-300 rounded-lg p-4 mb-4">
@@ -176,7 +183,7 @@ const MoleDetails = () => {
                 </Text>
               </View>
               
-              <Text className="text-xl font-bold mb-4">Your Skin Health Timeline</Text>
+              <Text className="text-xl font-bold mb-4">Your Skin Health</Text>
               
               {/* Body Part - Conditionally rendered based on edit state */}
               {isEditingBodyPart ? (

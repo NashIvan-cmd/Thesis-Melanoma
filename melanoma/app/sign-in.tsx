@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { router } from 'expo-router';
+import { useRouter, useNavigation } from 'expo-router';
 import { Text, View, TouchableOpacity } from 'react-native';
 
 import { useSession } from '@/services/authContext';
@@ -14,6 +14,7 @@ export default function SignIn() {
   const [password, setPassword] = useState<string>('');
   const [error, setError] = useState<string>('');
 
+  const router = useRouter();  
   const { signIn, session, accessToken, isLoading } = useSession();
 
   const handleSignUpRequest = () => {

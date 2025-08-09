@@ -11,8 +11,12 @@ import {
     deleteAccountController
 } from "../controllers/account.controller";
 import { validateToken } from "../controllers/authenticate.controller";
+// import { logInLimiterMiddleware } from "../utils/rateLimiter.util";
 
 const router = express.Router();
+
+// router.use('/v1/auth', logInLimiterMiddleware);
+// router.use('/v1/password', logInLimiterMiddleware);
 
 router.post('/v1/auth/account', authenticateLogin);
 router.post('/v1/new/account', createAccount);

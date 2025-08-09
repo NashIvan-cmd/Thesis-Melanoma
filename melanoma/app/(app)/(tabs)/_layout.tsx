@@ -3,6 +3,9 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import { Platform } from 'react-native';
 
 export default function TabLayout() {
+  // Add debug logging
+  console.log('TabLayout rendering...');
+
   // Medical-themed colors
   const activeColor = '#4caf50'; // Medical green
   const backgroundColor = '#ffffff'; // Clean white background
@@ -22,7 +25,7 @@ export default function TabLayout() {
         headerTintColor: textColor,
         tabBarStyle: {
           backgroundColor: backgroundColor,
-          height: Platform.OS === 'android' ? 60 : 'auto', // Fix for Android bottom tab height
+          height: Platform.OS === 'android' ? 60 : 'auto',
           paddingBottom: Platform.OS === 'android' ? 8 : 'auto',
           borderTopWidth: 1,
           borderTopColor: '#e0e0e0',

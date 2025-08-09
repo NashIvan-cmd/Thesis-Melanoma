@@ -52,3 +52,4 @@ export async function googleGenAi(stringValueOfModelAssessment: string, skinType
 
   return fullResponse;
 }
+

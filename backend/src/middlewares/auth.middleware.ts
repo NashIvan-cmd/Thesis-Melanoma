@@ -13,7 +13,7 @@ export const refreshTokenGenerator = (username: string): string => {
             throw new Error;
         }
 
-        const refreshToken = jwt.sign({ username: username }, secret, { expiresIn: '30d' });
+        const refreshToken = jwt.sign({ username: username }, secret, { expiresIn: '7d' });
 
         console.log({ refreshToken });
 
@@ -23,36 +23,33 @@ export const refreshTokenGenerator = (username: string): string => {
     }
 }
 
-export const authenticateRefreshToken = (refreshToken: string): boolean | undefined =>  {
-        console.log({ refreshToken });
-    try {   
-        if (!refreshToken) {
-            return false;
-        }
+export const authenticateRefreshToken = (refreshToken: string): boolean => {
+    try {
+        if (!refreshToken) return false;
+        console.log("RT", refreshToken);
 
-        const splittedRefreshToken = refreshToken.split(" ")[1]
-        console.log( { splittedRefreshToken });
-
-        if (!splittedRefreshToken) {
-            return false;
-        }
-
+        // const tokenPart = refreshToken.split(" ")[1];
+        // if (!tokenPart) return false;
+        
+        // console.log("TP", tokenPart);
         const secret = process.env.JWT_SECRET as string;
-
-        const refreshTokenDecode = jwt.verify(splittedRefreshToken, secret);
-
-        if (refreshTokenDecode) {
-            console.log("Seems like logic is correct");
-            accessTokenGenerator("test");
-        }
         
+        console.log("Before verify")
+        jwt.verify(refreshToken, secret); // will throw if expired
+         
+        console.log("After verify")
         return true;
-        
     } catch (error) {
-        console.log("Error @ authenticate refresh token", error);
-        throw error;
+        if (error instanceof jwt.TokenExpiredError) {
+            console.log("Refresh token expired.");
+            // This is where force log out should happen and tell them session expired
+            return false; // don't throw
+        }
+
+        console.log("Invalid refresh token:", error);
+        return false; // don't throw for bad tokens either
     }
-}
+};
 
 export const accessTokenGenerator  = (username: string) => {
     try {
@@ -63,7 +60,7 @@ export const accessTokenGenerator  = (username: string) => {
             throw new Error;
         }
 
-        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '1d' });
+        const accessToken = jwt.sign({ username: username }, secret, { expiresIn: '3m' });
 
         console.log({ accessToken });
 

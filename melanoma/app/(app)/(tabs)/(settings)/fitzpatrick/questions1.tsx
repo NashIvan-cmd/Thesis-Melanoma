@@ -88,7 +88,7 @@ const Questions1 = () => {
         </RadioGroup>
       </Card>
 
-      <ButtonGlue isDisabled={notComplete} onPress={handleNavigate}>
+      <ButtonGlue className='bg-blue-600' isDisabled={notComplete} onPress={handleNavigate}>
         <ButtonText>Next 2/5</ButtonText>
       </ButtonGlue>
     </ScrollView>

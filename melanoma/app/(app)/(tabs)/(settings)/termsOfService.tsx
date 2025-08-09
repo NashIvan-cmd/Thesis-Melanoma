@@ -14,6 +14,7 @@ import { useSession } from '@/services/authContext';
 import { API_URL } from '@env';
 import { router } from 'expo-router';
 import ModalComponent from '@/components/Modal';
+import { accessTokenInterceptor } from '@/interceptor/accessToken.interceptor';
 
 interface dataRes {
   success: string;
@@ -57,6 +58,8 @@ export default function AppPolicy() {
 
       // console.log({ result });
       const data = await result.json();
+
+      accessTokenInterceptor(data);
       console.log("Parsed result", data);
 
       if (data) {

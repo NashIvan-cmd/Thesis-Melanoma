@@ -11,6 +11,7 @@ import { CheckIcon } from '@/components/ui/icon';
 import { Button, ButtonText } from '@/components/ui/button';
 import { useSession } from '@/services/authContext';
 import { API_URL } from '@env';
+import { accessTokenInterceptor } from '@/interceptor/accessToken.interceptor';
 
 export default function DeleteAccount() {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
@@ -43,6 +44,7 @@ export default function DeleteAccount() {
       
       const data = await response.json();
       
+      accessTokenInterceptor(data);
       // Check if the request was successful
       if (response.ok) {
         console.log(`Successfully deleted account for user: ${userId}`);

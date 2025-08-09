@@ -1,8 +1,8 @@
 {
   "expo": {
-    "name": "melanoma",
+    "name": "Melanoma",
     "slug": "melanoma",
-    "version": "1.0.0",
+    "version": "1.1.1",
     "orientation": "portrait",
     "icon": "./assets/images/melanoma_logo_2.png",
     "splash": {
@@ -10,12 +10,21 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/2fe6dacb-d1a9-491c-bd96-ed9a9e41023e"
+    },
     "scheme": "myapp",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "jsEngine": "hermes",
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "runtimeVersion": {
+        "policy": "appVersion"
+      }
     },
     "android": {
       "adaptiveIcon": {
@@ -24,9 +33,12 @@
       },
       "permissions": [
         "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.CAMERA",
         "android.permission.RECORD_AUDIO"
       ],
-      "package": "com.nashivanramos.melanoma"
+      "package": "com.nashivanramos.melanoma",
+      "runtimeVersion": "1.0.0"
     },
     "web": {
       "bundler": "metro",
@@ -38,7 +50,7 @@
       [
         "expo-splash-screen",
         {
-          "image": "./assets/images/splashscreen_logo.png",
+          "image": "./assets/images/melanoma_logo_2.png",
           "resizeMode": "contain",
           "backgroundColor": "#ffffff"
         }
@@ -81,5 +93,6 @@
         "projectId": "2fe6dacb-d1a9-491c-bd96-ed9a9e41023e"
       }
     }
-  }
+  },
+  "icon": "./assets/images/melanoma_logo_2.png"
 }

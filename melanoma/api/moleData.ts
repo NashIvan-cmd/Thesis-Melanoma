@@ -1,3 +1,4 @@
+import { accessTokenInterceptor } from "@/interceptor/accessToken.interceptor";
 import { useImageStore } from "@/services/imageStore";
 import { useAssessmentStore } from "@/services/useAssessmentStore";
 import { useRecheckMoleStore } from "@/services/useRecheckStore";
@@ -142,8 +143,11 @@ export const moleData = async(accessToken: string, userId: string): Promise<I_As
         const data = await result.json();
         // handle data as needed
         if (!data) throw new Error("Parsed Result missing.");
+
+        accessTokenInterceptor(data);
         return data;
-        }
+        
+    }
         
     } catch (error) {
         console.error("Error @ mole data API", error);
@@ -165,6 +169,9 @@ export const molesToDisplay = async(userId: string, accessToken: string) => {
             })
         });
 
+        const data = await result.json();
+        console.log("Kei Data: ", data);
+        accessTokenInterceptor(data);
         return result
     } catch (error) {
         console.error("Error @ moles to display API", error);
@@ -193,7 +200,7 @@ export const molesToDisplayWithOrientation = async(
         const data = await result.json();
 
         console.log("Mole data with orientation", data);
-
+        accessTokenInterceptor(data);
         return data
     } catch (error) {
         console.error("Error @ moles to display API", error);

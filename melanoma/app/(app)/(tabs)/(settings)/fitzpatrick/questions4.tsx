@@ -98,6 +98,7 @@ const Questions4 = () => {
           isDisabled={notComplete} 
           onPress={handleNavigate} 
           style={{ width: '100%' }}
+          className='bg-blue-600'
         > 
           <ButtonText>Next 4/5</ButtonText>
         </ButtonGlue>

@@ -1,7 +1,8 @@
+import { accessTokenInterceptor } from "@/interceptor/accessToken.interceptor";
 import { useFitzpatrickStore } from "@/services/fitzPatrickStore";
 import { API_URL } from "@env";
 
-export const fitzpatrickData = async(userId: string, accessToken: string) => {
+export const fitzpatrickData = async(userId: string, accessToken: string, session: string) => {
     const { 
         eyeColor, 
         hairColor, 
@@ -25,7 +26,8 @@ export const fitzpatrickData = async(userId: string, accessToken: string) => {
             method: "POST",
             headers: {
                 "Content-Type":  "application/json",
-                "authorization": accessToken ? `Bearer ${accessToken}` : ''
+                "authorization": accessToken ? `Bearer ${accessToken}` : '',
+                "session": session ? `Bearer ${session}` : '',
             },
             body: JSON.stringify({
                 eyeColor, 
@@ -47,6 +49,9 @@ export const fitzpatrickData = async(userId: string, accessToken: string) => {
             })
         });
 
+        const data = await result.json();
+        console.log("Test refresher", data);
+        await accessTokenInterceptor(data);
         return result;
     } catch (error) {
         console.error("Error @ fitzPatrick API", error);

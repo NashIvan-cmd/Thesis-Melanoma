@@ -131,6 +131,7 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
             res.status(201).json({
                 message: 'Incomplete credentials'
             })
+            return;
         }
 
         const user = await findUser(username, password);
@@ -139,13 +140,21 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
        const accessToken = accessTokenGenerator(user.username);
     
        let refreshToken = refreshT;
+       console.log({ refreshToken });
        if (refreshT) {
         // Validate if not expired
         console.log("Refresh token value", refreshT);
        } else {
         refreshToken = refreshTokenGenerator(user.username);
        }
-      
+       console.log({ refreshToken });
+
+       await prisma.user_Account.update({
+        where: { id: userId },
+        data: {
+            refreshToken: refreshToken
+        }
+       })
 
         // if (!user) {
         //     res.status(404).json({
@@ -154,9 +163,9 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
         //     });
         // }
 
-        res.status(202).json({
+        res.status(200).json({
             accessToken,
-            refreshToken,
+            // refreshToken,
             userId,
             username: user.username,
             email: user.email,
@@ -167,7 +176,9 @@ export const authenticateLogin = async(req: Request, res: Response, next: NextFu
 
     } catch (error) {
         console.error('Error @ authenticate login controller', error);
-        next (error);
+        if (!res.headersSent) {
+        next(error);
+    }
     }
 }
 
@@ -394,4 +405,22 @@ export const deleteAccountController = async(req: Request, res: Response, next: 
         });
         return;
     }
+}
+
+const now = new Date().toLocaleString("en-US", { timeZone: "Asia/Manila" });
+const day = new Date(now).getDay(); // 0 = Sunday
+const hours = new Date(now).getHours();
+const minutes = new Date(now).getMinutes();
+
+export const forceLogOutAllUsers = () => {
+    try {
+        
+    } catch (error) {
+        
+    }
+}
+
+// Check if it's exactly Sunday 12:00 AM
+if (day === 0 && hours === 0 && minutes === 0) {
+   forceLogOutAllUsers(); // your logic here
 }

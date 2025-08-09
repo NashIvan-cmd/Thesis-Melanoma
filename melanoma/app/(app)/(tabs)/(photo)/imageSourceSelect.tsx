@@ -24,7 +24,7 @@ import { Alert } from 'react-native';
 import { I_Assessment } from '@/api/moleData';
 
 const ImageSourceSelector = () => {
-  const { accessToken, userId } = useSession();
+  const { getCurrentToken, userId } = useSession();
   const { setImageData, setBodyPartName, reset } = useImageStore();
   const { uri, bodyPartName } = useImageStore.getState();
   const { setAssessmentData } = useAssessmentStore();
@@ -209,6 +209,7 @@ const ImageSourceSelector = () => {
         // Clear any previous errors
         setError({ visible: false, message: "" });
         
+        const accessToken = await getCurrentToken();
         if (!accessToken || !userId) {
           throw new Error("Incomplete credentials to make this request");
         }

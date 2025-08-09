@@ -45,7 +45,7 @@ export type Mole = {
   };
 
 const Photo = () => {
-    const { userId, accessToken } = useSession();
+    const { userId, getCurrentToken } = useSession()
     const { setSelectedMole } = useMoleDataStore();
     const [facing, setFacing] = useState<CameraType>('back');
     const [permission, requestPermission] = useCameraPermissions();
@@ -63,7 +63,11 @@ const Photo = () => {
             console.log("Use effect running");
             const runAsyncEffect = async() => {
                 try {
+                const accessToken = await getCurrentToken();
+                
                 if (!userId) throw new Error("Missing userId");
+                console.log("Mole Access Token", accessToken);
+            
                 if (!accessToken) throw new Error("Missing access token");
                 
                 const response = await molesToDisplay(userId, accessToken);
@@ -162,7 +166,7 @@ const Photo = () => {
                         renderItem={({ item, index }) => (
                             <View key={index} className='flex flex-row h-[90] w-full bg-white border border-slate-200 p-[10] mt-[5] rounded-lg shadow-sm'>
                                 <View className="h-16 w-16 bg-blue-100 mr-[10] rounded-md overflow-hidden">
-                                    <Image source={{ uri: item.body_part }} style={{ width: 64, height: 64, borderRadius: 8 }}/>
+                                    <Image source={{ uri: item.cloudId }} style={{ width: 64, height: 64, borderRadius: 8 }}/>
                                 </View>
                                 <View>
                                     <Text>{" "}</Text>

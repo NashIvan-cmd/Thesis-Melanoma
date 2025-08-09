@@ -29,6 +29,11 @@ export const findUser = async(username: string, password: string) => {
         const hashedPassword = hashPassword(password);
         console.log({ hashedPassword });
         console.log({ userPass });
+        console.log("Comparing:");
+        console.log("Input password (raw):", password);
+        console.log("Hashed input password:", hashedPassword);
+        console.log("Stored user password:", user.password);
+        console.log("Exact match?", hashedPassword === user.password);
         const isValidPassword = hashedPassword === user.password ? true : false;
 
         if (!isValidPassword) {

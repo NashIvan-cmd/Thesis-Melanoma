@@ -8,6 +8,8 @@ import { errorHandler } from "./middlewares/error.middleware";
 // Loads .env variables into process.env
 dotenv.config();
 
+// import { logInLimiterMiddleware } from "./utils/rateLimiter.util";
+
 const app = express();
 
 // Prevents web applications running on one domain from making request to another domain

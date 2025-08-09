@@ -16,14 +16,15 @@ export const fitzPatrickController = async(req: Request, res: Response, next: Ne
         } else {
             skinTypeAssessment = await createFitzPatrick(req.body);
         }
-
+        console.log("Res local: ", res.locals.accessToken);
         if (skinTypeAssessment == "false") {
             res.status(500).json({
                 message: "Internal server error"
             })
         } else {
             res.status(200).json({
-                skinTypeAssessment
+                skinTypeAssessment,
+                accessToken: res.locals.accessToken || undefined
             })
         }
     } catch (error) {
@@ -46,7 +47,8 @@ export const validateForCoreFeatures = async(req: Request, res: Response, next: 
 
         res.status(200).json({
             record,
-            agreement
+            agreement,
+            accessToken: res.locals.accessToken || undefined
         })
     } catch (error) {
         next (error);

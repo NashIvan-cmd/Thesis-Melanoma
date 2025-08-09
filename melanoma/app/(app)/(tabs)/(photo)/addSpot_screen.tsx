@@ -56,7 +56,7 @@ type Mole = {
 }
 
 const AddSpot_screen = () => {
-  const { userId, accessToken } = useSession();
+  const { userId, getCurrentToken } = useSession();
   const { setCoordinates, resetUri } = useImageStore();
   const { setMoleId, setUserId } = useRecheckMoleStore();
   const ASPECT_RATIO = 620 / 255; // original height / original width
@@ -230,8 +230,10 @@ const AddSpot_screen = () => {
     }
   }
 
+  
   useEffect(() => {
     const fetchMoles = async () => {
+      const accessToken = await getCurrentToken();
       if (userId && accessToken && bodyPosition) {
         const result = await molesToDisplayWithOrientation(userId, accessToken, bodyPosition);
         
@@ -248,7 +250,7 @@ const AddSpot_screen = () => {
     };
 
     fetchMoles();
-  }, [userId, accessToken, bodyPosition]);
+  }, [userId, bodyPosition]);
 
   useEffect(() => {
     resetUri();

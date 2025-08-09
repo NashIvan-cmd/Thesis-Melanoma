@@ -119,7 +119,8 @@ export const moleMetadataController = async(req: Request, res: Response, next: N
         res.status(201).json({ 
             message: "Successful", 
             assessment,
-            moleData: responseResult 
+            moleData: responseResult,
+            accessToken: res.locals.accessToken || undefined
         });
 
     } catch (error) {
@@ -138,6 +139,7 @@ export const moleFetchAllController = async(req: Request, res: Response, next: N
         const allUserMole = await moleFetchAllByUser(moleOwnerId);
         
         res.status(200).json({
+            accessToken: res.locals.accessToken || undefined,
             allUserMole
         });
     } catch (error) {
@@ -158,8 +160,9 @@ export const getAllLatestMoleController = async(req: Request, res: Response, nex
         const fetchedAllMoles = await getAllMoleByUserId(userId) as MoleData[];
 
         // const manipulatedMoles = await (fetchedAllMoles);
-
+        console.log("Res locals ", res.locals.accessToken);
         res.status(200).json({
+            accessToken: res.locals.accessToken || undefined,
             fetchedAllMoles
         })
     } catch (error) {
@@ -184,6 +187,7 @@ export const getAllMolesWithOrientationController = async(req: Request, res: Res
         // const manipulatedMoles = await (fetchedAllMoles);
 
         res.status(200).json({
+            accessToken: res.locals.accessToken || undefined,
             fetchedAllMoles
         })
     } catch (error) {
@@ -208,6 +212,7 @@ export const fetchMoleById = async(req: Request, res: Response, next: NextFuncti
         }
 
         res.status(200).json({
+            accessToken: res.locals.accessToken || undefined,
             moleData
         })
     } catch (error) {
@@ -228,7 +233,7 @@ export const updateMoleController = async(req: Request, res: Response, next: Nex
             return
         }
 
-        res.status(200).json({ result });
+        res.status(200).json({ result, accessToken: res.locals.accessToken || undefined });
     } catch (error) {
         next (error);
     }
@@ -252,7 +257,8 @@ export const recheckMoleController = async(req: Request, res: Response, next: Ne
         res.status(200).json({ 
             message: "Successful", 
             assessment: assessmentResult,
-            moleData: moleData 
+            moleData: moleData,
+            accessToken: res.locals.accessToken || undefined
         });
     } catch (error) {
         next (error);

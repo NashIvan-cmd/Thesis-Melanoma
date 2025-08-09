@@ -61,6 +61,9 @@ const Instructions = () => {
       <Text style={{ fontSize: 16, marginBottom: 16 }}>
         3. Zoom in and center the mole then Take the photo. Make sure there is no other background except from the skin around the mole
       </Text>
+      <Text style={{ fontSize: 16, marginBottom: 16 }}>
+        Bonus Tip: For clearer results, consider shaving the hair around the mole area.
+      </Text>
     </Card>
 
       <ButtonGlue onPress={navigateNext} className='mt-auto bg-blue-600 h-10'>
